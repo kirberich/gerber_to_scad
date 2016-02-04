@@ -76,8 +76,8 @@ def primitive_to_faces(p):
     return faces
 
 
-def create_outline_shape(outline_filename):
-    outline = gerber.read(outline_filename)
+def create_outline_shape(outline_file):
+    outline = gerber.loads(outline_file.read())
     outline.to_metric()
 
     outline_faces = []
@@ -101,8 +101,8 @@ def create_outline_shape(outline_filename):
     return outline_shape
 
 
-def create_cutouts(solder_paste_filename):
-    solder_paste = gerber.read(solder_paste_filename)
+def create_cutouts(solderpaste_file):
+    solder_paste = gerber.loads(solderpaste_file.read())
     solder_paste.to_metric()
 
     cutout_faces = []
@@ -119,16 +119,10 @@ def create_cutouts(solder_paste_filename):
     return union()(*polygons)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Convert gerber files to an scad 3d printable solder stencil.')
-    parser.add_argument('outline_file', help='Outline file')
-    parser.add_argument('solderpaste_file', help='Solderpaste file')
-    parser.add_argument('output_file', help='Output file', default="output.scad")
-    args = parser.parse_args()
-
-    outline_shape = create_outline_shape(args.outline_file)
+def process(outline_file, solderpaste_file, output_file):
+    outline_shape = create_outline_shape(outline_file)
     outline_polygon = polygon(outline_shape)
-    cutout_polygon = create_cutouts(args.solderpaste_file)
+    cutout_polygon = create_cutouts(solderpaste_file)
 
     offset_outline_3d_points = utils.offset_points(
         outline_shape,
@@ -151,3 +145,17 @@ if __name__ == '__main__':
     combined = rotate(a=180, v=[1, 0, 0])(combined)
 
     scad_render_to_file(combined, args.output_file)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Convert gerber files to an scad 3d printable solder stencil.')
+    parser.add_argument('outline_file', help='Outline file')
+    parser.add_argument('solderpaste_file', help='Solderpaste file')
+    parser.add_argument('output_file', help='Output file', default="output.scad")
+    args = parser.parse_args()
+
+    outline_file = open(args.outline_file, 'rU')
+    solderpaste_file = open(args.solderpaste_file, 'rU')
+    output_file = open(args.output_file, 'rU')
+
+    process(outline_file, solderpaste_file, output_file)
