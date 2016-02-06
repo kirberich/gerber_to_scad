@@ -48,7 +48,7 @@ def combine_faces_into_shapes(faces):
     return shapes
 
 
-def make_v(v, decimal_places=4):
+def make_v(v, decimal_places=2):
     """ Round vertex coordinates to some amount of decimal places. """
     return round(v[0], decimal_places), round(v[1], decimal_places)
 
