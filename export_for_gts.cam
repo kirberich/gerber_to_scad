@@ -1,6 +1,5 @@
 [CAM Processor Job]
-Description[de]="<b>Erzeugt Extended-Gerber-Format (RS274X)</b><p>\nDieser CAM-Job besteht aus fünf Arbeitsschritten und erzeugt Fertigungsdaten für eine zweilagige Platine.<p><p>\nDie fünf Gerberdateien enthalten Daten für:<br>\nBestückungsseite  *.cmp<br>\nLötseite  *.sol<br>\nBestückungsdruck oben  *.plc<br>\nLötstoplack Bestückungsseite  *.stc<br>\nLötstoplack Lötseite  *.sts<br>"
-Description[en]="<b>Generates Extended Gerber Format</b><p>\nThis CAM job consists of five sections that generate data for a two layer board.<p><p>\nYou will get five gerber files that contain data for:<br>\ncomponent side *.cmp<br>\nsolder side  *.sol<br>\nsilkscreen component side  *.plc<br>\nsolder stop component side  *.stc<br>\nsolder stop solder sid  *.sts<br>"
+Description[en]="<b>Exports top paste and outline layers for stencil generation</b><p>\nThis CAM job creates two extended Gerber files, one for the outline layer and one for the top paste layer. Upload these files on solder-stencil.me."
 Section=Sec_1
 Section=Sec_2
 
