@@ -100,7 +100,17 @@ def create_outline_shape(outline_file):
 
     if len(outline_shapes) > 1:
         logging.warning("More than one outline shape found, using the largest one.")
-        outline_shape = sorted(outline_shapes, key=lambda s: len(s), reverse=True)[0]
+        biggest = None
+        biggest_size = (0, 0)
+        for shape in outline_shapes:
+            x_coordinates = [c[0] for c in shape]
+            y_coordinates = [c[0] for c in shape]
+            x_size = max(x_coordinates) - min(x_coordinates)
+            y_size = max(y_coordinates) - min(y_coordinates)
+            if x_size > biggest_size[0] or y_size > biggest_size[1]:
+                biggest = shape
+                biggest_size = (x_size, y_size)
+        outline_shape = biggest
     else:
         outline_shape = outline_shapes[0]
 
