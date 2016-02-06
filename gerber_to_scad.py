@@ -141,7 +141,7 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0):
 
     polygons = []
     for shape in cutout_shapes:
-        if increase_hole_size_by:
+        if increase_hole_size_by and len(shape) > 2:
             shape = offset_shape(shape, increase_hole_size_by)
         polygons.append(polygon([[x, y] for x, y in shape]))
 
