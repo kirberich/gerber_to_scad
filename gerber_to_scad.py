@@ -66,10 +66,11 @@ def primitive_to_faces(p):
     elif type(p) == primitives.Circle:
         raise NotImplementedError("Handling circle primitives is not handled yet.")
     elif type(p) == primitives.Rectangle:
-        v1 = p.lower_left  # lower left
-        v2 = (v1[0], v1[1] + p.height)  # top left
-        v3 = (v2[0] + p.width, v2[1])  # top right
-        v4 = (v1[0] + p.width, v1[1])  # bottom right
+        v1 = make_v(p.lower_left)  # lower left
+        v2 = make_v((v1[0], v1[1] + p.height))  # top left
+        v3 = make_v((v2[0] + p.width, v2[1]))  # top right
+        v4 = make_v((v1[0] + p.width, v1[1]))  # bottom right
+
         faces += [(v1, v2), (v2, v3), (v3, v4), (v4, v1)]
     else:
         raise NotImplementedError("Unexpected primitive type {}".format(type(p)))
