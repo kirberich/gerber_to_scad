@@ -83,8 +83,7 @@ def primitive_to_faces(p):
     return faces
 
 
-def create_outline_shape(outline_file):
-    outline = gerber.loads(outline_file.read())
+def create_outline_shape(outline):
     outline.to_metric()
 
     outline_faces = []
@@ -104,7 +103,7 @@ def create_outline_shape(outline_file):
         biggest_size = (0, 0)
         for shape in outline_shapes:
             x_coordinates = [c[0] for c in shape]
-            y_coordinates = [c[0] for c in shape]
+            y_coordinates = [c[1] for c in shape]
             x_size = max(x_coordinates) - min(x_coordinates)
             y_size = max(y_coordinates) - min(y_coordinates)
             if x_size > biggest_size[0] or y_size > biggest_size[1]:
@@ -118,8 +117,19 @@ def create_outline_shape(outline_file):
     return outline_shape
 
 
-def create_cutouts(solderpaste_file):
-    solder_paste = gerber.loads(solderpaste_file.read())
+def offset_shape(shape, offset, inside=False):
+    """ Offset a shape by <offset> mm. """
+    offset_3d_points = utils.offset_points(
+        shape,
+        offset,
+        inside=inside
+    )
+
+    return [[x, y] for x, y, z in offset_3d_points]
+
+
+
+def create_cutouts(solder_paste, increase_hole_size_by=0.0):
     solder_paste.to_metric()
 
     cutout_faces = []
@@ -131,37 +141,70 @@ def create_cutouts(solderpaste_file):
 
     polygons = []
     for shape in cutout_shapes:
+        if increase_hole_size_by:
+            shape = offset_shape(shape, increase_hole_size_by)
         polygons.append(polygon([[x, y] for x, y in shape]))
 
     return union()(*polygons)
 
 
-def process(outline_file, solderpaste_file):
+def bounding_box(shape):
+    min_x = min(shape, key=lambda v: v[0])[0]
+    max_x = max(shape, key=lambda v: v[0])[0]
+    min_y = min(shape, key=lambda v: v[1])[1]
+    max_y = max(shape, key=lambda v: v[1])[1]
+    return [
+        [min_x, min_y],
+        [min_x, max_y],
+        [max_x, max_y],
+        [max_x, min_y]
+    ]
+
+
+def process(outline_file, solderpaste_file, stencil_thickness=0.2, include_ledge=True,
+            ledge_height=1.2, ledge_gap=0.0, increase_hole_size_by=0.0):
+
     outline_shape = create_outline_shape(outline_file)
+    cutout_polygon = create_cutouts(solderpaste_file, increase_hole_size_by=increase_hole_size_by)
+
+    if ledge_gap:
+        # Add a gap between the ledge and the stencil
+        outline_shape = offset_shape(outline_shape, ledge_gap)
     outline_polygon = polygon(outline_shape)
-    cutout_polygon = create_cutouts(solderpaste_file)
 
-    offset_outline_3d_points = utils.offset_points(
-        outline_shape,
-        1.2,
-        inside=False
-    )
+    stencil = linear_extrude(height=stencil_thickness)(outline_polygon - cutout_polygon)
 
-    offset_outline_polygon = polygon(
-        [[x, y] for x, y, z in offset_outline_3d_points]
-    )
+    if include_ledge:
+        ledge_shape = offset_shape(outline_shape, 1.2)
+        ledge_polygon = polygon(ledge_shape) - outline_polygon
 
-    wall_polygon = offset_outline_polygon - outline_polygon
-    wall = utils.down(0.8)(linear_extrude(height=1)(wall_polygon))
+        # Cut the ledge in half by taking the bounding box of the outline, cutting it in half
+        # and removing the resulting shape from the ledge shape
+        # We always leave the longer side of the ledge intact so we don't end up with a tiny ledge.
+        cutter = bounding_box(ledge_shape)
+        height = abs(cutter[1][1] - cutter[0][1])
+        width = abs(cutter[0][0] - cutter[3][0])
 
-    board = linear_extrude(height=0.2)(outline_polygon - cutout_polygon)
+        if width > height:
+            cutter[1][1] -= height/2
+            cutter[2][1] -= height/2
+        else:
+            cutter[2][0] -= width/2
+            cutter[3][0] -= width/2
 
-    combined = wall + board
+        ledge_polygon = ledge_polygon - polygon(cutter)
 
-    # Rotate the board to make it printable
-    combined = rotate(a=180, v=[1, 0, 0])(combined)
+        ledge = utils.down(
+            ledge_height - stencil_thickness
+        )(
+            linear_extrude(height=ledge_height)(ledge_polygon)
+        )
+        stencil = ledge + stencil
 
-    return scad_render(combined)
+    # Rotate the stencil to make it printable
+    stencil = rotate(a=180, v=[1, 0, 0])(stencil)
+
+    return scad_render(stencil)
 
 
 if __name__ == '__main__':
@@ -174,5 +217,8 @@ if __name__ == '__main__':
     outline_file = open(args.outline_file, 'rU')
     solderpaste_file = open(args.solderpaste_file, 'rU')
     
+    outline = gerber.loads(outline_file.read())
+    solder_paste = gerber.loads(solderpaste_file.read())
+
     with open(args.output_file, 'w') as output_file:
-        output_file.write(process(outline_file, solderpaste_file))
+        output_file.write(process(outline, solder_paste))
