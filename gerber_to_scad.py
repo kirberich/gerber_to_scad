@@ -7,7 +7,7 @@ from gerber import primitives
 
 from solid import (
     polygon,
-    scad_render_to_file,
+    scad_render,
     union,
     linear_extrude,
     rotate,
@@ -136,7 +136,7 @@ def create_cutouts(solderpaste_file):
     return union()(*polygons)
 
 
-def process(outline_file, solderpaste_file, output_file):
+def process(outline_file, solderpaste_file):
     outline_shape = create_outline_shape(outline_file)
     outline_polygon = polygon(outline_shape)
     cutout_polygon = create_cutouts(solderpaste_file)
@@ -161,7 +161,7 @@ def process(outline_file, solderpaste_file, output_file):
     # Rotate the board to make it printable
     combined = rotate(a=180, v=[1, 0, 0])(combined)
 
-    scad_render_to_file(combined, args.output_file)
+    return scad_render(combined)
 
 
 if __name__ == '__main__':
@@ -173,6 +173,6 @@ if __name__ == '__main__':
 
     outline_file = open(args.outline_file, 'rU')
     solderpaste_file = open(args.solderpaste_file, 'rU')
-    output_file = open(args.output_file, 'rU')
-
-    process(outline_file, solderpaste_file, output_file)
+    
+    with open(args.output_file, 'w') as output_file:
+        output_file.write(process(outline_file, solderpaste_file))
