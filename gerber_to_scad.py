@@ -72,6 +72,12 @@ def primitive_to_faces(p):
         v4 = make_v((v1[0] + p.width, v1[1]))  # bottom right
 
         faces += [(v1, v2), (v2, v3), (v3, v4), (v4, v1)]
+    elif type(p) == primitives.Region:
+        for sub_primitive in p.primitives:
+            # the primitives in regions aren't converted to metric when calling to_metric on the file,
+            # so we call it explicitly here:
+            sub_primitive.to_metric()
+            faces += primitive_to_faces(sub_primitive)
     else:
         raise NotImplementedError("Unexpected primitive type {}".format(type(p)))
     return faces
