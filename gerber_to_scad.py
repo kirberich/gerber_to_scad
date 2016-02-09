@@ -7,6 +7,7 @@ import math
 
 import gerber
 from gerber import primitives
+from gerber.utils import convex_hull
 
 from solid import (
     polygon,
@@ -130,7 +131,7 @@ def create_outline_shape(outline):
     else:
         outline_shape = outline_shapes[0]
 
-    outline_shape = [[x, y] for x, y in outline_shape]
+    outline_shape = convex_hull([[x, y] for x, y in outline_shape])
     return outline_shape
 
 
