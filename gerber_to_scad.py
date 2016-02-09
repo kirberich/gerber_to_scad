@@ -234,9 +234,10 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--thickness', type=float, default=0.2,
         help='Thickness (in mm) of the stencil. Make sure this is a multiple '
         'of the layer height you use for printing (default: %(default)0.1f)')
-    parser.add_argument('-l', '--ledge', type=bool, default=True,
-        help='Include a ledge around half the outline of the board, to allow '
-        'aligning the stencil easily (default: %(default)r)')
+    parser.add_argument('-n', '--no-ledge', dest='include_ledge', action='store_false',
+        help='By default, a ledge around half the outline of the board is included, to allow '
+        'aligning the stencil easily. Pass this to exclude this ledge.')
+    parser.set_defaults(include_ledge=True)
     parser.add_argument('-L', '--ledge-height', type=float, default=1.2,
         help='Height of the stencil ledge. This should be less than the '
         'thickness of the PCB (default: %(default)0.1f)')
@@ -255,7 +256,6 @@ if __name__ == '__main__':
     
     outline = gerber.loads(outline_file.read())
     solder_paste = gerber.loads(solderpaste_file.read())
-
     with open(args.output_file, 'w') as output_file:
         output_file.write(process(outline, solder_paste, args.thickness,
-            args.ledge, args.ledge_height, args.gap, args.increase_hole_size))
+            args.include_ledge, args.ledge_height, args.gap, args.increase_hole_size))
