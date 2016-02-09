@@ -3,6 +3,7 @@
 import sys
 import logging
 import argparse
+import math
 
 import gerber
 from gerber import primitives
@@ -66,7 +67,21 @@ def primitive_to_faces(p):
 
         faces.append((v1, v2))
     elif type(p) == primitives.Circle:
-        raise NotImplementedError("Handling circle primitives is not handled yet.")
+        # Rasterize circle, aiming for a hopefully reasonable segment length of 0.5mm
+        vertices = []
+        circ = math.pi * p.diameter
+        num_segments = int(round(circ / 0.5))
+
+        # Generate vertexes for each segment around the circle
+        for s in range(0, num_segments):
+            angle = s * (2 * math.pi / num_segments)
+            x = p.position[0] + math.cos(angle) * p.diameter
+            y = p.position[1] + math.sin(angle) * p.diameter
+            vertices.append(make_v((x, y)))
+
+        # Create segments and append them to faces
+        for v_index in range(len(vertices) - 1):
+            faces.append((vertices[v_index], vertices[v_index + 1]))
     elif type(p) == primitives.Rectangle:
         v1 = make_v(p.lower_left)  # lower left
         v2 = make_v((v1[0], v1[1] + p.height))  # top left
