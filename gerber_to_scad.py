@@ -1,13 +1,11 @@
 #!/usr/bin/env python
-
-import sys
-import logging
 import argparse
 import math
 
+from scipy.spatial import ConvexHull
+
 import gerber
 from gerber import primitives
-from gerber.utils import convex_hull
 
 from solid import (
     polygon,
@@ -16,8 +14,13 @@ from solid import (
     linear_extrude,
     rotate,
 )
-
 from solid import utils
+
+
+def convex_hull(points):
+    hull = ConvexHull(points)
+    hull_points = [hull.points[vertex_index] for vertex_index in hull.vertices]
+    return [(float(x), float(y)) for x, y in hull_points]
 
 
 def combine_faces_into_shapes(faces):
@@ -57,82 +60,58 @@ def make_v(v, decimal_places=3):
     return round(v[0], decimal_places), round(v[1], decimal_places)
 
 
-def primitive_to_faces(p):
-    """ Turns a gerber primitive into a list of faces.
-        The faces and vertices in the faces are in drawing-order.
-    """
-    faces = []
+def primitive_to_shape(p):
+    """ Turns a gerber primitive into a shape. """
+    # the primitives in sub-primitives sometimes aren't converted to metric when calling to_metric on the file,
+    # so we call it explicitly here:
+    p.to_metric()
+
+    vertices = []
     if type(p) == primitives.Line:
         v1 = make_v(p.start)
         v2 = make_v(p.end)
-
-        faces.append((v1, v2))
+        vertices = [v1, v2]
     elif type(p) == primitives.Circle:
-        # Rasterize circle, aiming for a hopefully reasonable segment length of 0.5mm
+        # Rasterize circle, aiming for a hopefully reasonable segment length of 0.1mm
         vertices = []
         circ = math.pi * p.diameter
-        num_segments = int(round(circ / 0.5))
+        num_segments = int(round(circ / 0.1))
 
         # Generate vertexes for each segment around the circle
         for s in range(0, num_segments):
             angle = s * (2 * math.pi / num_segments)
-            x = p.position[0] + math.cos(angle) * p.diameter
-            y = p.position[1] + math.sin(angle) * p.diameter
+            x = p.position[0] + math.cos(angle) * p.diameter / 2
+            y = p.position[1] + math.sin(angle) * p.diameter / 2
             vertices.append(make_v((x, y)))
-
-        # Create segments and append them to faces
-        for v_index in range(len(vertices) - 1):
-            faces.append((vertices[v_index], vertices[v_index + 1]))
     elif type(p) == primitives.Rectangle:
         v1 = make_v(p.lower_left)  # lower left
         v2 = make_v((v1[0], v1[1] + p.height))  # top left
         v3 = make_v((v2[0] + p.width, v2[1]))  # top right
         v4 = make_v((v1[0] + p.width, v1[1]))  # bottom right
-
-        faces += [(v1, v2), (v2, v3), (v3, v4), (v4, v1)]
+        vertices = [v1, v2, v3, v4]
     elif type(p) == primitives.Region:
+        vertices = []
         for sub_primitive in p.primitives:
-            # the primitives in regions aren't converted to metric when calling to_metric on the file,
-            # so we call it explicitly here:
-            sub_primitive.to_metric()
-            faces += primitive_to_faces(sub_primitive)
+            vertices += [vertex for vertex in primitive_to_shape(sub_primitive) if vertex not in vertices]
+    elif type(p) == primitives.Obround:
+        # We don't care about vertex duplication here because we'll just convex_hull the whole thing
+        vertices = []
+        for sub_primitive in p.subshapes.values():
+            vertices += primitive_to_shape(sub_primitive)
+        vertices = convex_hull(vertices)
     else:
         raise NotImplementedError("Unexpected primitive type {}".format(type(p)))
-    return faces
+    return vertices
 
 
 def create_outline_shape(outline):
     outline.to_metric()
 
-    outline_faces = []
-
+    outline_vertices = []
     for p in outline.primitives:
-        outline_faces += primitive_to_faces(p)
+        outline_vertices += primitive_to_shape(p)
 
-    outline_shapes = combine_faces_into_shapes(outline_faces)
-
-    if not outline_shapes:
-        logging.error("No outline shape found, quitting.")
-        sys.exit(1)
-
-    if len(outline_shapes) > 1:
-        logging.warning("More than one outline shape found, using the largest one.")
-        biggest = None
-        biggest_size = (0, 0)
-        for shape in outline_shapes:
-            x_coordinates = [c[0] for c in shape]
-            y_coordinates = [c[1] for c in shape]
-            x_size = max(x_coordinates) - min(x_coordinates)
-            y_size = max(y_coordinates) - min(y_coordinates)
-            if x_size > biggest_size[0] or y_size > biggest_size[1]:
-                biggest = shape
-                biggest_size = (x_size, y_size)
-        outline_shape = biggest
-    else:
-        outline_shape = outline_shapes[0]
-
-    outline_shape = convex_hull([[x, y] for x, y in outline_shape])
-    return outline_shape
+    return convex_hull(outline_vertices)
 
 
 def offset_shape(shape, offset, inside=False):
@@ -146,16 +125,13 @@ def offset_shape(shape, offset, inside=False):
     return [[x, y] for x, y, z in offset_3d_points]
 
 
-
 def create_cutouts(solder_paste, increase_hole_size_by=0.0):
     solder_paste.to_metric()
 
-    cutout_faces = []
+    cutout_shapes = []
 
     for p in solder_paste.primitives:
-        cutout_faces += primitive_to_faces(p)
-
-    cutout_shapes = combine_faces_into_shapes(cutout_faces)
+        cutout_shapes.append(primitive_to_shape(p))
 
     polygons = []
     for shape in cutout_shapes:
@@ -254,9 +230,18 @@ if __name__ == '__main__':
 
     outline_file = open(args.outline_file, 'rU')
     solderpaste_file = open(args.solderpaste_file, 'rU')
-    
+
     outline = gerber.loads(outline_file.read())
     solder_paste = gerber.loads(solderpaste_file.read())
     with open(args.output_file, 'w') as output_file:
-        output_file.write(process(outline, solder_paste, args.thickness,
-            args.include_ledge, args.ledge_height, args.gap, args.increase_hole_size))
+        output_file.write(
+            process(
+                outline,
+                solder_paste,
+                args.thickness,
+                args.include_ledge,
+                args.ledge_height,
+                args.gap,
+                args.increase_hole_size
+            )
+        )
