@@ -99,6 +99,19 @@ def primitive_to_shape(p):
         for sub_primitive in p.subshapes.values():
             vertices += primitive_to_shape(sub_primitive)
         vertices = convex_hull(vertices)
+    elif type(p) == primitives.Arc:
+        sweep_angle = p.sweep_angle
+        arc_length = p.radius * sweep_angle
+        num_segments = int(round(arc_length / 0.1))
+        angle_delta = sweep_angle / num_segments
+
+        angle = p.start_angle
+        for s in range(0, num_segments):
+            x = p.center[0] + math.cos(angle) * p.radius
+            y = p.center[1] + math.sin(angle) * p.radius
+            vertices.append(make_v((x, y)))
+
+            angle = angle + angle_delta if p.direction == 'counterclockwise' else angle - angle_delta
     else:
         raise NotImplementedError("Unexpected primitive type {}".format(type(p)))
     return vertices
