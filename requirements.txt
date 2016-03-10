@@ -1,4 +1,4 @@
 pyhull
 git+https://github.com/SolidCode/SolidPython.git
-git+https://github.com/curtacircuitos/pcb-tools.git
+git+https://github.com/kirberich/pcb-tools.git
 scipy
