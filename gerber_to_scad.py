@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import math
+from copy import copy
 
 from scipy.spatial import ConvexHull
 
@@ -60,6 +61,35 @@ def make_v(v, decimal_places=3):
     return round(v[0], decimal_places), round(v[1], decimal_places)
 
 
+def rect_from_line(line):
+    """ Creates a rectangle from a line primitive by thickening it 
+        according to the primitive's aperture radius.
+    """
+    r = line.aperture.radius
+
+    v1 = make_v([
+        line.start[0] - r * math.sin(line.angle) - r * math.cos(line.angle),
+        line.start[1] - r * math.cos(line.angle) - r * math.sin(line.angle),
+    ])
+
+    v2 = make_v([
+        line.start[0] + r * math.sin(line.angle) - r * math.cos(line.angle),
+        line.start[1] - r * math.cos(line.angle) - r * math.sin(line.angle),
+    ])
+
+    v3 = make_v([
+        line.end[0] + r * math.sin(line.angle) - r * math.cos(line.angle),
+        line.end[1] + r * math.cos(line.angle) + r * math.sin(line.angle),
+    ])
+
+    v4 = make_v([
+        line.end[0] - r * math.sin(line.angle) - r * math.cos(line.angle),
+        line.end[1] + r * math.cos(line.angle) + r * math.sin(line.angle),
+    ])
+
+    return [v1, v2, v3, v4]
+
+
 def primitive_to_shape(p):
     """ Turns a gerber primitive into a shape. """
     # the primitives in sub-primitives sometimes aren't converted to metric when calling to_metric on the file,
@@ -68,12 +98,19 @@ def primitive_to_shape(p):
 
     vertices = []
     if type(p) == primitives.Line:
-        v1 = make_v(p.start)
-        v2 = make_v(p.end)
-        vertices = [v1, v2]
+        # Lines are tricky: they're sometimes used to draw rounded rectangles by using a circular aperture
+        # or they're used to outline shapes. For now, we'll just use those two cases:
+        # If a non-zero aperture size is set, we'll draw rectangles (ignoring the circular edges for now)
+        # otherwise we'll just use the lines directly (they're later joined into shapes)
+
+        if p.aperture.radius:
+            vertices = rect_from_line(p)
+        else:
+            v1 = make_v(p.start)
+            v2 = make_v(p.end)
+            vertices = [v1, v2]
     elif type(p) == primitives.Circle:
         # Rasterize circle, aiming for a hopefully reasonable segment length of 0.1mm
-        vertices = []
         circ = math.pi * p.diameter
         num_segments = int(round(circ / 0.1))
 
@@ -90,12 +127,10 @@ def primitive_to_shape(p):
         v4 = make_v((v1[0] + p.width, v1[1]))  # bottom right
         vertices = [v1, v2, v3, v4]
     elif type(p) == primitives.Region:
-        vertices = []
         for sub_primitive in p.primitives:
             vertices += [vertex for vertex in primitive_to_shape(sub_primitive) if vertex not in vertices]
     elif type(p) == primitives.Obround:
         # We don't care about vertex duplication here because we'll just convex_hull the whole thing
-        vertices = []
         for sub_primitive in p.subshapes.values():
             vertices += primitive_to_shape(sub_primitive)
         vertices = convex_hull(vertices)
@@ -138,14 +173,92 @@ def offset_shape(shape, offset, inside=False):
     return [[x, y] for x, y, z in offset_3d_points]
 
 
+def find_line_closest_to_point(point, lines):
+    """ Finds the line from a list of lines that is closest to `point`. 
+        Returns a bunch of information about the closest line.
+    """
+    d = float('inf')
+    closest_vertex = None
+    far_vertex = None
+    closest_line_index = None
+    for line_index, line in enumerate(lines):
+        for vertex_index, vertex in enumerate(line):
+            point_d = (vertex[0] - point[0])**2 + (vertex[1] - point[1])**2
+            if point_d < d and point_d < (0.001)**2:
+                d = point_d
+                closest_vertex = vertex
+                far_vertex = line[vertex_index - 1]  # 0 or -1
+                closest_line_index = line_index
+
+    return {
+        'closest_line_index': closest_line_index, 
+        'close_vertex': closest_vertex,
+        'far_vertex': far_vertex
+    }
+
+
+def lines_to_shapes(lines):
+    """ Takes a list of lines and joins them together into shapes.
+
+        1) Starts the first shape with the first line
+        2) Looks for other line segments that are close to its end points (first or last vertex)
+        3) If it finds a close line it discards the close point and appends the second point to the shape
+        4) The found line is removed from the list of lines.
+        5) Repeats the process with the new shape, again looking for lines close to its (new) end points
+        6) Once no more close shapes are found, the first shape is closed and the process starts over with the next remaining line
+    """
+    # lines = deepcopy(lines)
+    if not lines:
+        return []
+
+    shapes = []
+    shape = copy(lines[0])
+    lines = lines[1:]
+
+    while True:
+        # Try to find a point close to the start of the shape
+        start_point_info = find_line_closest_to_point(shape[0], lines)
+        if start_point_info['closest_line_index'] is not None:
+            shape.insert(0, start_point_info['far_vertex'])
+            del lines[start_point_info['closest_line_index']]
+            continue
+
+        # If no point close to the start was found, try to find a point close to the end of the shape
+        end_point_info = find_line_closest_to_point(shape[-1], lines)
+        if end_point_info['closest_line_index'] is not None:
+            shape.append(end_point_info['far_vertex'])
+            del lines[end_point_info['closest_line_index']]
+            continue
+
+        # There is no close point to this shape, so it must be finished.
+        shapes.append(shape)
+
+        # While there are lines remaining, chose the next one as the start of the next shape
+        if lines:
+            shape = copy(lines[0])
+            lines = lines[1:]
+        else:
+            break
+
+    # shapes = [convex_hull(shape) for shape in shapes if len(shape) > 2]
+    return shapes
+
+
 def create_cutouts(solder_paste, increase_hole_size_by=0.0):
     solder_paste.to_metric()
 
     cutout_shapes = []
+    cutout_lines = []
 
     for p in solder_paste.primitives:
-        cutout_shapes.append(primitive_to_shape(p))
+        shape = primitive_to_shape(p)
+        if len(shape) > 2:
+            cutout_shapes.append(shape)
+        else:
+            cutout_lines.append(shape)
 
+    # If the cutouts contain lines we try to first join them together into shapes
+    cutout_shapes += lines_to_shapes(cutout_lines)
     polygons = []
     for shape in cutout_shapes:
         if increase_hole_size_by and len(shape) > 2:
