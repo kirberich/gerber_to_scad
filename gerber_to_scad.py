@@ -63,9 +63,12 @@ def make_v(v, decimal_places=3):
 
 def rect_from_line(line):
     """ Creates a rectangle from a line primitive by thickening it 
-        according to the primitive's aperture radius.
+        according to the primitive's aperture size.
+
+        Treats rectangular apertures as square because otherwise the maths
+        becomes too hard for my brain.
     """
-    r = line.aperture.radius
+    r = getattr(line.aperture, 'radius', 0) or getattr(line.aperture, 'width', 0)
 
     v1 = make_v([
         line.start[0] - r * math.sin(line.angle) - r * math.cos(line.angle),
@@ -90,6 +93,13 @@ def rect_from_line(line):
     return [v1, v2, v3, v4]
 
 
+def is_wide_aperture(aperture):
+    """ Returns True if an aperture has a non-zero size, False otherwise. """
+    if getattr(aperture, 'radius', 0) or getattr(aperture, 'width', 0):
+        return True
+    return False
+
+
 def primitive_to_shape(p):
     """ Turns a gerber primitive into a shape. """
     # the primitives in sub-primitives sometimes aren't converted to metric when calling to_metric on the file,
@@ -98,24 +108,17 @@ def primitive_to_shape(p):
 
     vertices = []
     if type(p) == primitives.Line:
-        # Lines are tricky: they're sometimes used to draw rounded rectangles by using a circular aperture
+        # Lines are tricky: they're sometimes used to draw rounded rectangles by using a large aperture
         # or they're used to outline shapes. For now, we'll just use those two cases:
-        # If a non-zero aperture size is set, we'll draw rectangles (ignoring the circular edges for now)
+        # If a non-zero aperture size is set, we'll draw rectangles (treating circular apertures as square for now)
         # otherwise we'll just use the lines directly (they're later joined into shapes)
 
-        if getattr(p.aperture, 'radius', 0):
+        if is_wide_aperture(p.aperture):
             vertices = rect_from_line(p)
         else:
-            if type(p.aperture) == primitives.Rectangle:
-                v1 = make_v(p.start)
-                v2 = make_v((v1[0], v1[1] + p.aperture.height))
-                v3 = make_v((v2[0] + p.aperture.width, v2[1]))  # top right
-                v4 = make_v((v1[0] + p.aperture.width, v1[1]))  # bottom right
-                vertices = [v1, v2, v3, v4]
-            else:
-                v1 = make_v(p.start)
-                v2 = make_v(p.end)
-                vertices = [v1, v2]
+            v1 = make_v(p.start)
+            v2 = make_v(p.end)
+            vertices = [v1, v2]
     elif type(p) == primitives.Circle:
         # Rasterize circle, aiming for a hopefully reasonable segment length of 0.1mm
         circ = math.pi * p.diameter
