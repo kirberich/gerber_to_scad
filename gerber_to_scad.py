@@ -103,7 +103,7 @@ def primitive_to_shape(p):
         # If a non-zero aperture size is set, we'll draw rectangles (ignoring the circular edges for now)
         # otherwise we'll just use the lines directly (they're later joined into shapes)
 
-        if hasattr(p.aperture, 'radius') and p.aperture.radius:
+        if getattr(p.aperture, 'radius', 0):
             vertices = rect_from_line(p)
         else:
             if type(p.aperture) == primitives.Rectangle:
