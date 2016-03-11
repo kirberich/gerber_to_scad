@@ -106,9 +106,16 @@ def primitive_to_shape(p):
         if hasattr(p.aperture, 'radius') and p.aperture.radius:
             vertices = rect_from_line(p)
         else:
-            v1 = make_v(p.start)
-            v2 = make_v(p.end)
-            vertices = [v1, v2]
+            if type(p.aperture) == primitives.Rectangle:
+                v1 = make_v(p.start)
+                v2 = make_v((v1[0], v1[1] + p.aperture.height))
+                v3 = make_v((v2[0] + p.aperture.width, v2[1]))  # top right
+                v4 = make_v((v1[0] + p.aperture.width, v1[1]))  # bottom right
+                vertices = [v1, v2, v3, v4]
+            else:
+                v1 = make_v(p.start)
+                v2 = make_v(p.end)
+                vertices = [v1, v2]
     elif type(p) == primitives.Circle:
         # Rasterize circle, aiming for a hopefully reasonable segment length of 0.1mm
         circ = math.pi * p.diameter
