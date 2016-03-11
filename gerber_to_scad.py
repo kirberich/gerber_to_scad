@@ -16,6 +16,7 @@ from solid import (
     rotate,
 )
 from solid import utils
+from vector import V
 
 
 def convex_hull(points):
@@ -61,6 +62,21 @@ def make_v(v, decimal_places=3):
     return round(v[0], decimal_places), round(v[1], decimal_places)
 
 
+def get_aperture_size(aperture):
+    diameter = getattr(aperture, 'diameter', 0)
+    width = getattr(aperture, 'width', 0)
+    height = getattr(aperture, 'height', 0)
+
+    return diameter or width or height
+
+
+def has_wide_aperture(aperture):
+    """ Returns True if an aperture has a non-zero size, False otherwise. """
+    if get_aperture_size(aperture):
+        return True
+    return False
+
+
 def rect_from_line(line):
     """ Creates a rectangle from a line primitive by thickening it 
         according to the primitive's aperture size.
@@ -68,36 +84,27 @@ def rect_from_line(line):
         Treats rectangular apertures as square because otherwise the maths
         becomes too hard for my brain.
     """
-    r = getattr(line.aperture, 'radius', 0) or getattr(line.aperture, 'width', 0)
+    r = get_aperture_size(line.aperture) / 2.0
 
-    v1 = make_v([
-        line.start[0] - r * math.sin(line.angle) - r * math.cos(line.angle),
-        line.start[1] - r * math.cos(line.angle) - r * math.sin(line.angle),
-    ])
+    start_v = V.from_tuple(line.start)
+    end_v = V.from_tuple(line.end)
 
-    v2 = make_v([
-        line.start[0] + r * math.sin(line.angle) - r * math.cos(line.angle),
-        line.start[1] - r * math.cos(line.angle) - r * math.sin(line.angle),
-    ])
+    dir_v = end_v - start_v
+    # normalize direction vector
+    dir_v = dir_v / abs(dir_v)
 
-    v3 = make_v([
-        line.end[0] + r * math.sin(line.angle) - r * math.cos(line.angle),
-        line.end[1] + r * math.cos(line.angle) + r * math.sin(line.angle),
-    ])
+    # 45 degree angle means the vector pointing to the new rectangle edges has to be sqrt(2)*r long
+    v_len = math.sqrt(2)*r
 
-    v4 = make_v([
-        line.end[0] - r * math.sin(line.angle) - r * math.cos(line.angle),
-        line.end[1] + r * math.cos(line.angle) + r * math.sin(line.angle),
-    ])
+    # Give the direction vector the appropriate length
+    dir_v *= v_len
+
+    v1 = (start_v + dir_v.rotate(135, as_degrees=True)).as_tuple()
+    v2 = (start_v + dir_v.rotate(-135, as_degrees=True)).as_tuple()
+    v3 = (end_v + dir_v.rotate(-45, as_degrees=True)).as_tuple()
+    v4 = (end_v + dir_v.rotate(45, as_degrees=True)).as_tuple()
 
     return [v1, v2, v3, v4]
-
-
-def is_wide_aperture(aperture):
-    """ Returns True if an aperture has a non-zero size, False otherwise. """
-    if getattr(aperture, 'radius', 0) or getattr(aperture, 'width', 0):
-        return True
-    return False
 
 
 def primitive_to_shape(p):
@@ -113,7 +120,7 @@ def primitive_to_shape(p):
         # If a non-zero aperture size is set, we'll draw rectangles (treating circular apertures as square for now)
         # otherwise we'll just use the lines directly (they're later joined into shapes)
 
-        if is_wide_aperture(p.aperture):
+        if has_wide_aperture(p.aperture):
             vertices = rect_from_line(p)
         else:
             v1 = make_v(p.start)
