@@ -177,8 +177,25 @@ def create_outline_shape(outline):
     outline.to_metric()
 
     outline_vertices = []
-    for p in outline.primitives:
-        outline_vertices += primitive_to_shape(p)
+    if outline.primitives:
+        for p in outline.primitives:
+            outline_vertices += primitive_to_shape(p)
+    else:
+        # For some reason, some boards don't have any primitives but just some rectangular bounds
+        # In that case, we just use those bounds as a rectangle defining the board
+        # To make matters worse, the bounds aren't stored in the usual shape format but rather as
+        # ((min_x, max_x), (min_y, max_y))
+
+        bounds = outline.bounds
+        min_x, max_x = bounds[0]
+        min_y, max_y = bounds[1]
+
+        outline_vertices += [
+            [min_x, min_y],
+            [min_x, max_y],
+            [max_x, max_y],
+            [max_x, min_y]
+        ]
 
     return convex_hull(outline_vertices)
 
