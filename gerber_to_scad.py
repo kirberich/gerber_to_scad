@@ -288,6 +288,47 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0):
     cutout_shapes = []
     cutout_lines = []
 
+    apertures = {}
+    current_aperture = None
+    current_x = None
+    current_y = None
+    for statement in solder_paste.statements:
+        if statement.type == 'PARAM' and statement.param == 'AD':  # define aperture
+            apertures[statement.d] = {
+                'shape': statement.shape,
+                'modifiers': statement.modifiers
+            }
+        elif statement.type == 'APERTURE':
+            current_aperture = statement.d
+        elif statement.type == 'COORD' and statement.op == 'D3':  # flash object coordinates
+            if not current_aperture:
+                raise Exception("No aperture set on flash object coordinates!")
+
+            aperture = apertures[current_aperture]
+            current_x = statement.x if statement.x is not None else current_x
+            current_y = statement.y if statement.y is not None else current_y
+            if aperture['shape'] == 'C':  # circle
+                cutout_shapes.append(primitive_to_shape(
+                    primitives.Circle(
+                        diameter=aperture['modifiers'][0][0],
+                        position=[current_x, current_y]
+                    )
+                ))
+            elif aperture['shape'] == 'R':  # rectangle
+                width, height = aperture['modifiers'][0]
+                cutout_shapes.append(primitive_to_shape(
+                    primitives.Rectangle(
+                        position=[current_x, current_y],
+                        width=width,
+                        height=height,
+                    )
+                ))
+            else:
+                raise NotImplementedError("Only circular and rectangular flash objects are supported!")
+
+
+
+
     for p in solder_paste.primitives:
         shape = primitive_to_shape(p)
         if len(shape) > 2:
