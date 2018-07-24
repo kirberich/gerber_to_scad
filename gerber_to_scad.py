@@ -73,8 +73,9 @@ def get_aperture_size(aperture):
 
 
 def has_wide_aperture(aperture):
-    """ Returns True if an aperture has a non-zero size, False otherwise. """
-    if get_aperture_size(aperture):
+    """ Returns True if an aperture has a non-neglible size, False otherwise. """
+    # This is quite hacky, we'd probably want to do a proper sweep of these apertures instead :/
+    if get_aperture_size(aperture) > 0.5:
         return True
     return False
 
