@@ -18,6 +18,8 @@ from solid import (
 from solid import utils
 from vector import V
 
+MAX_SEGMENT_LENGTH = 0.3
+
 
 def convex_hull(points):
     hull = ConvexHull(points)
@@ -133,7 +135,7 @@ def primitive_to_shape(p):
     elif type(p) == primitives.Circle:
         # Rasterize circle, aiming for a hopefully reasonable segment length of 0.1mm
         circ = math.pi * p.diameter
-        num_segments = max(1, int(round(circ / 0.1)))
+        num_segments = max(1, int(round(circ / MAX_SEGMENT_LENGTH)))
 
         # Generate vertexes for each segment around the circle
         for s in range(0, num_segments):
@@ -158,7 +160,7 @@ def primitive_to_shape(p):
     elif type(p) == primitives.Arc:
         sweep_angle = p.sweep_angle
         arc_length = p.radius * sweep_angle
-        num_segments = max(1, int(round(arc_length / 0.1)))
+        num_segments = max(1, int(round(arc_length / MAX_SEGMENT_LENGTH)))
         angle_delta = sweep_angle / num_segments
 
         angle = p.start_angle
