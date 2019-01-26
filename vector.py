@@ -12,7 +12,8 @@ class V(object):
     __repr__ = __unicode__
 
     @classmethod
-    def from_tuple(cls, (x, y)):
+    def from_tuple(cls, coordinates):
+        x, y = coordinates
         return V(x, y)
 
     def as_tuple(self):
@@ -113,3 +114,4 @@ class V(object):
             raise Exception("Division by zero")
         other = float(other)
         return V(self.x / other, self.y / other)
+    __truediv__ = __div__
