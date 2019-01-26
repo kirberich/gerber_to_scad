@@ -113,8 +113,11 @@ def rect_from_line(line):
     return [v1, v2, v3, v4]
 
 
-def primitive_to_shape(p):
-    """ Turns a gerber primitive into a shape. """
+def primitive_to_shape(p, in_region=False):
+    """ Turns a gerber primitive into a shape.
+
+    If in_region is True, all shapes are assumed to be contours only, ignoring apertures.
+    """
     # the primitives in sub-primitives sometimes aren't converted to metric when calling to_metric on the file,
     # so we call it explicitly here:
     p.to_metric()
@@ -126,7 +129,7 @@ def primitive_to_shape(p):
         # If a non-zero aperture size is set, we'll draw rectangles (treating circular apertures as square for now)
         # otherwise we'll just use the lines directly (they're later joined into shapes)
 
-        if has_wide_aperture(p.aperture):
+        if not in_region and has_wide_aperture(p.aperture):
             vertices = rect_from_line(p)
         else:
             v1 = make_v(p.start)
@@ -151,7 +154,8 @@ def primitive_to_shape(p):
         vertices = [v1, v2, v3, v4]
     elif type(p) == primitives.Region:
         for sub_primitive in p.primitives:
-            vertices += [vertex for vertex in primitive_to_shape(sub_primitive) if vertex not in vertices]
+            vertices += [vertex for vertex in primitive_to_shape(
+                sub_primitive, in_region=True) if vertex not in vertices]
     elif type(p) == primitives.Obround:
         # We don't care about vertex duplication here because we'll just convex_hull the whole thing
         for sub_primitive in p.subshapes.values():
