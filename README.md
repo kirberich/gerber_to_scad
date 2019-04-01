@@ -48,5 +48,5 @@ optional arguments:
 For basic usage, simply run the script with input files for the gerber outline and solderpaste files and specify an output:
 
 ```bash
-python gerber_to_scad.py outline_file.gko toppaste_file.gtp output.stl
+python gerber_to_scad.py outline_file.gko toppaste_file.gtp output.scad
 ```
