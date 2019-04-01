@@ -3,13 +3,23 @@ Simple python script for converting gerber files into a 3d printable solder sten
 
 ## Installation
 
+### Python 2.7
 ```bash
 cd gerber_to_scad
-virtualenv env # Only tested for python 2.7
+virtualenv env
 source env/bin/activate
 pip install -r requirements.txt
 ```
 
+### Python 3
+```bash
+cd gerber_to_scad
+python3 -m venv env
+source env/bin/activate
+pip3 install -r requirements.txt
+```
+
+## Usage
 You should now be able to run the script. You'll get some information on available options if you run it with the -h argument:
 ```bash
 (env) $ python gerber_to_scad.py -h
