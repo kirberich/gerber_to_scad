@@ -366,7 +366,7 @@ def bounding_box(shape):
     ]
 
 
-def process(outline_file, solderpaste_file, stencil_thickness=0.2, include_ledge=True,
+def process(outline_file, solderpaste_file, stencil_thickness=0.2, bottom_side=False, include_ledge=True,
             ledge_height=1.2, ledge_gap=0.0, increase_hole_size_by=0.0):
 
     outline_shape = create_outline_shape(outline_file)
@@ -400,14 +400,15 @@ def process(outline_file, solderpaste_file, stencil_thickness=0.2, include_ledge
         ledge_polygon = ledge_polygon - polygon(cutter)
 
         ledge = utils.down(
-            ledge_height - stencil_thickness
+            0 if bottom_side else (ledge_height - stencil_thickness)
         )(
             linear_extrude(height=ledge_height)(ledge_polygon)
         )
         stencil = ledge + stencil
 
     # Rotate the stencil to make it printable
-    stencil = rotate(a=180, v=[1, 0, 0])(stencil)
+    if not bottom_side:
+        stencil = rotate(a=180, v=[1, 0, 0])(stencil)
 
     return scad_render(stencil)
 
@@ -422,6 +423,9 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--thickness', type=float, default=0.2,
         help='Thickness (in mm) of the stencil. Make sure this is a multiple '
         'of the layer height you use for printing (default: %(default)0.1f)')
+    parser.add_argument('-b', '--bottom-side', dest='bottom_side', action='store_true',
+        help='By default, the solder paste file is processed as the PCB top side. Pass this '
+        'if the file is of the bottom side.')
     parser.add_argument('-n', '--no-ledge', dest='include_ledge', action='store_false',
         help='By default, a ledge around half the outline of the board is included, to allow '
         'aligning the stencil easily. Pass this to exclude this ledge.')
@@ -450,6 +454,7 @@ if __name__ == '__main__':
                 outline,
                 solder_paste,
                 args.thickness,
+                args.bottom_side,
                 args.include_ledge,
                 args.ledge_height,
                 args.gap,
