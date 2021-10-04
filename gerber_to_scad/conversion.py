@@ -3,7 +3,12 @@ from copy import copy
 
 
 from gerber import primitives
-from gerber.am_statements import AMOutlinePrimitive
+from gerber.am_statements import (
+    AMOutlinePrimitive,
+    AMCenterLinePrimitive,
+    AMCirclePrimitive,
+    AMPrimitive,
+)
 
 from solid import (
     polygon,
@@ -17,7 +22,7 @@ from .vector import V
 from . import geometry
 from . import gerber_helpers
 
-MAX_SEGMENT_LENGTH = 0.3
+MAX_SEGMENT_LENGTH = 0.1
 
 
 def combine_faces_into_shapes(faces):
@@ -98,7 +103,8 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False):
     """
     # the primitives in sub-primitives sometimes aren't converted to metric when calling to_metric on the file,
     # so we call it explicitly here:
-    p.to_metric()
+    if not isinstance(p, AMPrimitive) and p.units != "metric":
+        p.to_metric()
 
     vertices = []
     if type(p) == primitives.Line:
@@ -113,7 +119,7 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False):
             v1 = make_v(p.start)
             v2 = make_v(p.end)
             vertices = [v1, v2]
-    elif type(p) == primitives.Circle:
+    elif type(p) in [primitives.Circle, AMCirclePrimitive]:
         # Rasterize circle, aiming for a hopefully reasonable segment length of 0.1mm
         circ = math.pi * p.diameter
         num_segments = max(1, int(round(circ / MAX_SEGMENT_LENGTH)))
@@ -130,6 +136,39 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False):
         v3 = make_v((v2[0] + p.width, v2[1]))  # top right
         v4 = make_v((v1[0] + p.width, v1[1]))  # bottom right
         vertices = [v1, v2, v3, v4]
+    elif type(p) == AMCenterLinePrimitive:
+        # Essentially a rotated rectangle
+        print(f"Center line {p.rotation} deg")
+        center = p.center
+        angle_rad = p.rotation * math.pi / 180
+        cos_angle = math.cos(angle_rad)
+        sin_angle = math.sin(angle_rad)
+
+        p1 = (center[0] - p.width / 2, center[1] - p.height / 2)
+        p2 = (center[0] + p.width / 2, center[1] - p.height / 2)
+        p3 = (center[0] + p.width / 2, center[1] + p.height / 2)
+        p4 = (center[0] - p.width / 2, center[1] + p.height / 2)
+
+        # Rotate point about origin
+        # (x*cos(theta)-y*sin(theta), x*sin(theta)+y*cos(theta))
+        vertices = [
+            (
+                p1[0] * cos_angle - p1[1] * sin_angle,
+                p1[0] * sin_angle + p1[1] * cos_angle,
+            ),
+            (
+                p2[0] * cos_angle - p2[1] * sin_angle,
+                p2[0] * sin_angle + p2[1] * cos_angle,
+            ),
+            (
+                p3[0] * cos_angle - p3[1] * sin_angle,
+                p3[0] * sin_angle + p3[1] * cos_angle,
+            ),
+            (
+                p4[0] * cos_angle - p4[1] * sin_angle,
+                p4[0] * sin_angle + p4[1] * cos_angle,
+            ),
+        ]
     elif type(p) == primitives.Region:
         for sub_primitive in p.primitives:
             vertices += [
@@ -277,10 +316,11 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
     cutout_lines = []
 
     apertures = {}
+    # Aperture macros are saved as a list of shapes
     aperture_macros = {}
     current_aperture = None
-    current_x = None
-    current_y = None
+    current_x = 0
+    current_y = 0
     for statement in solder_paste.statements:
         if statement.type == "PARAM":
             if statement.param == "AD":
@@ -291,12 +331,24 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
                 }
             elif statement.param == "AM":
                 # Aperture macro
-                aperture_macros[statement.name] = statement.primitives[0].points
+                aperture_macros[statement.name] = []
+                for primitive in statement.primitives:
+                    aperture_macros[statement.name].append(
+                        primitive_to_shape(primitive)
+                    )
+
         elif statement.type == "APERTURE":
             current_aperture = statement.d
-        elif (
-            statement.type == "COORD" and statement.op == "D3"
-        ):  # flash object coordinates
+        elif statement.type == "COORD" and statement.op in ["D02", "D2"]:
+            # Move coordinates
+            if statement.x is not None:
+                current_x = statement.x
+            if statement.y is not None:
+                current_y = statement.y
+        elif statement.type == "COORD" and statement.op in [
+            "D03",
+            "D3",
+        ]:  # flash object coordinates
             if not current_aperture:
                 raise Exception("No aperture set on flash object coordinates!")
 
@@ -314,6 +366,7 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
                 )
             elif aperture["shape"] == "R":  # rectangle
                 width, height = aperture["modifiers"][0]
+                print(f"Rect X: {current_x} Y: {current_y}")
                 cutout_shapes.append(
                     primitive_to_shape(
                         primitives.Rectangle(
@@ -323,16 +376,21 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
                         )
                     )
                 )
+            elif aperture["shape"] == "O":  # obround
+                width, height = aperture["modifiers"][0]
+                print(f"Obround at {current_x},{current_y}")
+                obround = primitives.Obround((0, 0), width, height)
+                shape = primitive_to_shape(obround)
+                offset_shape = [(p[0] + current_x, p[1] + current_y) for p in shape]
+                cutout_shapes.append(offset_shape)
             elif aperture["shape"] in aperture_macros:  # Aperture macro shape
-                # if aperture["shape"] != "OUTLINE2":
-                #     continue
-                macro = aperture_macros[aperture["shape"]]
-                # Offset all points in the macro and add the resulting shape
-                shape = [(p[0] + current_x, p[1] + current_y) for p in macro]
-                cutout_shapes.append(shape)
+                for macro_shape in aperture_macros[aperture["shape"]]:
+                    # Offset all points in the macro and add the resulting shape
+                    shape = [(p[0] + current_x, p[1] + current_y) for p in macro_shape]
+                    cutout_shapes.append(shape)
             else:
                 raise NotImplementedError(
-                    "Only circular and rectangular flash objects are supported!"
+                    f"Unsupported flash aperture {aperture['shape']}"
                 )
         else:
             print("Unknown statement")
