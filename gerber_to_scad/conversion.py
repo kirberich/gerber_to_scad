@@ -3,6 +3,7 @@ from copy import copy
 
 
 from gerber import primitives
+from gerber.am_statements import AMOutlinePrimitive
 
 from solid import (
     polygon,
@@ -160,6 +161,8 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False):
                 if p.direction == "counterclockwise"
                 else angle - angle_delta
             )
+    elif type(p) == AMOutlinePrimitive:
+        return [make_v(point) for point in p.points]
     else:
         raise NotImplementedError("Unexpected primitive type {}".format(type(p)))
     return vertices
@@ -274,15 +277,21 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
     cutout_lines = []
 
     apertures = {}
+    aperture_macros = {}
     current_aperture = None
     current_x = None
     current_y = None
     for statement in solder_paste.statements:
-        if statement.type == "PARAM" and statement.param == "AD":  # define aperture
-            apertures[statement.d] = {
-                "shape": statement.shape,
-                "modifiers": statement.modifiers,
-            }
+        if statement.type == "PARAM":
+            if statement.param == "AD":
+                # define aperture
+                apertures[statement.d] = {
+                    "shape": statement.shape,
+                    "modifiers": statement.modifiers,
+                }
+            elif statement.param == "AM":
+                # Aperture macro
+                aperture_macros[statement.name] = statement.primitives[0].points
         elif statement.type == "APERTURE":
             current_aperture = statement.d
         elif (
@@ -314,12 +323,25 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
                         )
                     )
                 )
+            elif aperture["shape"] in aperture_macros:  # Aperture macro shape
+                # if aperture["shape"] != "OUTLINE2":
+                #     continue
+                macro = aperture_macros[aperture["shape"]]
+                # Offset all points in the macro and add the resulting shape
+                shape = [(p[0] + current_x, p[1] + current_y) for p in macro]
+                cutout_shapes.append(shape)
             else:
                 raise NotImplementedError(
                     "Only circular and rectangular flash objects are supported!"
                 )
+        else:
+            print("Unknown statement")
+            print(statement)
 
     for p in solder_paste.primitives:
+        if type(p) == primitives.AMGroup:
+            print(f"Ignoring AMGroup {p}")
+            continue
         shape = primitive_to_shape(p, simplify_regions=simplify_regions)
         if len(shape) > 2:
             cutout_shapes.append(shape)
