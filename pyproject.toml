@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "gerber_to_scad"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9,<3.10"
+pcb-tools = "^0.1.6"
+solidpython = "^1.1.1"
+taskipy = "^1.9.0"
+scipy = "^1.7.1"
+Django = "^3.2.7"
+django-environ = "^0.7.0"
+gunicorn = "^20.1.0"
+django-bootstrap3 = "^15.0.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.taskipy.tasks]
+g2s = "python gerber_to_scad/gerber_to_scad.py"
+service = "gunicorn --workers 1 --threads 8 gts_service.wsgi"

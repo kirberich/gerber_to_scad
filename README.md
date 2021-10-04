@@ -2,25 +2,24 @@
 Simple python script for converting gerber files into a 3d printable solder stencil scad file
 
 ## Installation
+gerber to scad requires python3.9
 
-### Python 2.7
+* Make sure you have (poetry)[https://python-poetry.org/docs/] installed
+* Run poetry install
+
+Note: on M1 macs, scipy doesn't install correctly out of the box. If you're getting installation errors, try this:
+
 ```bash
-cd gerber_to_scad
-virtualenv env
-source env/bin/activate
-pip install -r requirements.txt
+brew install openblas
+export OPENBLAS="$(brew --prefix openblas)"
+poetry install
 ```
-
-### Python 3
-```bash
-cd gerber_to_scad
-python3 -m venv env
-source env/bin/activate
-pip3 install -r requirements.txt
-```
-
 ## Usage
+
+* To activate the poetry virtualenv, run `poetry shell`.
+
 You should now be able to run the script. You'll get some information on available options if you run it with the -h argument:
+
 ```bash
 (env) $ python gerber_to_scad.py -h
 usage: gerber_to_scad.py [-h] [-t THICKNESS] [-n] [-L LEDGE_HEIGHT] [-g GAP]
