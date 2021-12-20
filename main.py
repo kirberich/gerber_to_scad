@@ -53,6 +53,11 @@ if __name__ == "__main__":
         "mm). Use this if you find holes get printed smaller than they should "
         "(default: %(default)0.1f)",
     )
+    parser.add_argument(
+        "--flip",
+        action="store_true",
+        help="Flip the stencil. Use this for making stencils for the bottom layer.",
+    )
 
     args = parser.parse_args()
 
@@ -71,5 +76,6 @@ if __name__ == "__main__":
                 args.ledge_height,
                 args.gap,
                 args.increase_hole_size,
+                flip_stencil=args.flip,
             )
         )

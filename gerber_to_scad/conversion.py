@@ -10,13 +10,7 @@ from gerber.am_statements import (
     AMPrimitive,
 )
 
-from solid import (
-    polygon,
-    scad_render,
-    union,
-    linear_extrude,
-    rotate,
-)
+from solid import polygon, scad_render, union, linear_extrude, rotate, mirror, translate
 from solid import utils
 from .vector import V
 from . import geometry
@@ -429,6 +423,7 @@ def process_gerber(
     ledge_gap=0.0,
     increase_hole_size_by=0.0,
     simplify_regions=False,
+    flip_stencil=False,
 ):
     """Convert gerber outline and solderpaste files to an scad file."""
     outline_shape = create_outline_shape(outline_file)
@@ -445,6 +440,16 @@ def process_gerber(
         # Add a gap between the ledge and the stencil
         outline_shape = offset_shape(outline_shape, ledge_gap)
     outline_polygon = polygon(outline_shape)
+
+    if flip_stencil:
+        mirror_normal = (-1, 0, 0)
+        outline_bounds = geometry.bounding_box(outline_shape)
+        outline_polygon = translate((outline_bounds[2][0], 0, 0))(
+            mirror(mirror_normal)(outline_polygon)
+        )
+        cutout_polygon = translate((outline_bounds[2][0], 0, 0))(
+            mirror(mirror_normal)(cutout_polygon)
+        )
 
     stencil = linear_extrude(height=stencil_thickness)(outline_polygon - cutout_polygon)
 

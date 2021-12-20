@@ -54,6 +54,7 @@ def main(request):
                 form.cleaned_data["ledge_gap"],
                 form.cleaned_data["increase_hole_size_by"],
                 form.cleaned_data["simplify_regions"],
+                flip_stencil=form.cleaned_data["flip_stencil"],
             )
 
             file_id = randint(1000000000, 9999999999)
