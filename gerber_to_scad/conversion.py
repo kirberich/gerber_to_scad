@@ -113,7 +113,11 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False):
         # If a non-zero aperture size is set, we'll draw rectangles (treating circular apertures as square for now)
         # otherwise we'll just use the lines directly (they're later joined into shapes)
 
-        if not in_region and gerber_helpers.has_wide_aperture(p.aperture):
+        length = math.sqrt((p.start[0] - p.end[0]) ** 2 + (p.start[1] - p.end[1]) ** 2)
+        if not in_region and gerber_helpers.has_wide_aperture(
+            p.aperture, length=length
+        ):
+
             vertices = rect_from_line(p)
         else:
             v1 = make_v(p.start)
@@ -393,8 +397,7 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
                     f"Unsupported flash aperture {aperture['shape']}"
                 )
         else:
-            print("Unknown statement")
-            print(statement)
+            pass
 
     for p in solder_paste.primitives:
         if type(p) == primitives.AMGroup:
