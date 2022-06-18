@@ -1,17 +1,19 @@
 """Geometry helpers"""
 from scipy.spatial import ConvexHull
+from .vector import V
+from typing import Tuple, List
 
 
-def bounding_box(shape):
+def bounding_box(shape) -> Tuple[V, V, V, V]:
     min_x = min(shape, key=lambda v: v[0])[0]
     max_x = max(shape, key=lambda v: v[0])[0]
     min_y = min(shape, key=lambda v: v[1])[1]
     max_y = max(shape, key=lambda v: v[1])[1]
-    return [[min_x, min_y], [min_x, max_y], [max_x, max_y], [max_x, min_y]]
+    return (V(min_x, min_y), V(min_x, max_y), V(max_x, max_y), V(max_x, min_y))
 
 
-def convex_hull(points):
-    hull = ConvexHull(points)
+def convex_hull(points: List[V]) -> List[V]:
+    hull = ConvexHull([v.as_tuple() for v in points])
 
     # import matplotlib.pyplot as plt
 
@@ -22,4 +24,4 @@ def convex_hull(points):
     # plt.show()
     hull_points = [hull.points[vertex_index] for vertex_index in hull.vertices]
 
-    return [(float(x), float(y)) for x, y in hull_points]
+    return [V(float(x), float(y)) for x, y in hull_points]

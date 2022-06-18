@@ -1,5 +1,7 @@
 # Basic vector maths class
 import math
+from typing import Union
+from functools import singledispatchmethod
 
 
 class V(object):
@@ -19,6 +21,13 @@ class V(object):
 
     def as_tuple(self):
         return (self.x, self.y)
+
+    def __getitem__(self, index):
+        if index == 0:
+            return self.x
+        if index == 1:
+            return self.y
+        raise IndexError("Vectors are two-dimensional!")
 
     @classmethod
     def intersection(cls, o1, d1, o2, d2):
@@ -106,7 +115,7 @@ class V(object):
         other = self.consume_tuple(other)
         return V(self.x - other.x, self.y - other.y)
 
-    def __mul__(self, other) -> "V":
+    def __mul__(self, other):
         other = self.consume_tuple(other)
         if isinstance(other, V):
             return self.x * other.x + self.y * other.y
