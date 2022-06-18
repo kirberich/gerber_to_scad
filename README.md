@@ -21,8 +21,8 @@ poetry install
 You should now be able to run the script. You'll get some information on available options if you run it with the -h argument:
 
 ```bash
-(env) $ python gerber_to_scad.py -h
-usage: gerber_to_scad.py [-h] [-t THICKNESS] [-n] [-L LEDGE_HEIGHT] [-g GAP]
+(env) $ python main.py -h
+usage: main.py [-h] [-t THICKNESS] [-n] [-L LEDGE_HEIGHT] [-g GAP]
                          [-i INCREASE_HOLE_SIZE]
                          outline_file solderpaste_file output_file
 
@@ -57,5 +57,5 @@ optional arguments:
 For basic usage, simply run the script with input files for the gerber outline and solderpaste files and specify an output:
 
 ```bash
-python gerber_to_scad.py outline_file.gko toppaste_file.gtp output.scad
+python main.py outline_file.gko toppaste_file.gtp output.scad
 ```
