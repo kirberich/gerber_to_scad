@@ -207,7 +207,7 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
 
 def create_outline_shape(outline) -> List[V]:
     outline.to_metric()
-    outline_vertices = []
+    outline_vertices: List[V] = []
     if outline.primitives:
         for p in outline.primitives:
             outline_vertices += primitive_to_shape(p)
@@ -222,10 +222,10 @@ def create_outline_shape(outline) -> List[V]:
         min_y, max_y = bounds[1]
 
         outline_vertices += [
-            [min_x, min_y],
-            [min_x, max_y],
-            [max_x, max_y],
-            [max_x, min_y],
+            V(min_x, min_y),
+            V(min_x, max_y),
+            V(max_x, max_y),
+            V(max_x, min_y),
         ]
 
     return geometry.convex_hull(outline_vertices)
