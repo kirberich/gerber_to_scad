@@ -266,7 +266,7 @@ def find_line_closest_to_point(point, lines):
     }
 
 
-def lines_to_shapes(lines) -> List[List[V]]:
+def lines_to_shapes(lines: List[List[V]]) -> List[List[V]]:
     """Takes a list of lines and joins them together into shapes.
 
     1) Starts the first shape with the first line
@@ -280,7 +280,7 @@ def lines_to_shapes(lines) -> List[List[V]]:
     if not lines:
         return []
 
-    shapes = []
+    shapes: List[List[V]] = []
     shape = copy(lines[0])
     lines = lines[1:]
 
@@ -317,7 +317,7 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
     solder_paste.to_metric()
 
     cutout_shapes: List[List[V]] = []
-    cutout_lines = []
+    cutout_lines: List[List[V]] = []
 
     apertures = {}
     # Aperture macros are saved as a list of shapes
