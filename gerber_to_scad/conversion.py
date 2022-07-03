@@ -82,10 +82,10 @@ def rect_from_line(line):
     # Give the direction vector the appropriate length
     dir_v = cast(V, dir_v * v_len)
 
-    v1 = (start_v + dir_v.rotate(135, as_degrees=True)).as_tuple()
-    v2 = (start_v + dir_v.rotate(-135, as_degrees=True)).as_tuple()
-    v3 = (end_v + dir_v.rotate(-45, as_degrees=True)).as_tuple()
-    v4 = (end_v + dir_v.rotate(45, as_degrees=True)).as_tuple()
+    v1 = start_v + dir_v.rotate(135, as_degrees=True)
+    v2 = start_v + dir_v.rotate(-135, as_degrees=True)
+    v3 = end_v + dir_v.rotate(-45, as_degrees=True)
+    v4 = end_v + dir_v.rotate(45, as_degrees=True)
 
     return [v1, v2, v3, v4]
 
@@ -100,7 +100,7 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
     if not isinstance(p, AMPrimitive) and p.units != "metric":
         p.to_metric()
 
-    vertices = []
+    vertices: List[V] = []
     if isinstance(p, primitives.Line):
         # Lines are tricky: they're sometimes used to draw rounded rectangles by using a large aperture
         # or they're used to outline shapes. For now, we'll just use those two cases:
@@ -150,19 +150,19 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
         # Rotate point about origin
         # (x*cos(theta)-y*sin(theta), x*sin(theta)+y*cos(theta))
         vertices = [
-            (
+            V(
                 p1[0] * cos_angle - p1[1] * sin_angle,
                 p1[0] * sin_angle + p1[1] * cos_angle,
             ),
-            (
+            V(
                 p2[0] * cos_angle - p2[1] * sin_angle,
                 p2[0] * sin_angle + p2[1] * cos_angle,
             ),
-            (
+            V(
                 p3[0] * cos_angle - p3[1] * sin_angle,
                 p3[0] * sin_angle + p3[1] * cos_angle,
             ),
-            (
+            V(
                 p4[0] * cos_angle - p4[1] * sin_angle,
                 p4[0] * sin_angle + p4[1] * cos_angle,
             ),
