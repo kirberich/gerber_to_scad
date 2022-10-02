@@ -2,10 +2,11 @@
 Simple python script for converting gerber files into a 3d printable solder stencil scad file
 
 ## Installation
-gerber to scad requires python3.9
+gerber to scad requires python3.9 also pcb-tools and scipy modules
 
 * Make sure you have (poetry)[https://python-poetry.org/docs/] installed
 * Run poetry install
+* Run pip3 install pcb-tools scipy
 
 Note: on M1 macs, scipy doesn't install correctly out of the box. If you're getting installation errors, try this:
 
