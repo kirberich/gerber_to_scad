@@ -8,6 +8,7 @@ from gerber.am_statements import (
     AMCenterLinePrimitive,
     AMCirclePrimitive,
     AMPrimitive,
+    AMCommentPrimitive,
 )
 
 from solid import polygon, scad_render, union, linear_extrude, rotate, mirror, translate
@@ -200,6 +201,8 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
             )
     elif isinstance(p, AMOutlinePrimitive):
         return [make_v(point) for point in p.points]
+    elif isinstance(p, AMCommentPrimitive):
+        return []
     else:
         raise NotImplementedError("Unexpected primitive type {}".format(type(p)))
     return vertices
