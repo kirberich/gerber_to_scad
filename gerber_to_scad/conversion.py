@@ -9,6 +9,7 @@ from gerber.am_statements import (
     AMCirclePrimitive,
     AMPrimitive,
     AMCommentPrimitive,
+    AMVectorLinePrimitive,
 )
 
 from solid import polygon, scad_render, union, linear_extrude, rotate, mirror, translate
@@ -57,7 +58,7 @@ def make_v(v: Tuple[float, float], decimal_places=3) -> V:
     return V(round(v[0], decimal_places), round(v[1], decimal_places))
 
 
-def rect_from_line(line):
+def rect_from_line(line: primitives.Line):
     """Creates a rectangle from a line primitive by thickening it
     according to the primitive's aperture size.
 
@@ -183,12 +184,23 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
             vertices += primitive_to_shape(sub_primitive)
         vertices = geometry.convex_hull(vertices)
     elif isinstance(p, primitives.Arc):
-        sweep_angle = p.sweep_angle
+        if p.direction == "counterclockwise":
+            if p.end_angle <= p.start_angle:
+                sweep_angle = 360 - (p.start_angle - p.end_angle)
+            else:
+                sweep_angle = p.start_angle - p.end_angle
+        else:
+            if p.end_angle >= p.start_angle:
+                sweep_angle = 360 - (p.end_angle - p.start_angle)
+            else:
+                sweep_angle = p.start_angle - p.end_angle
+
         arc_length = p.radius * sweep_angle
         num_segments = max(1, int(round(arc_length / MAX_SEGMENT_LENGTH)))
         angle_delta = sweep_angle / num_segments
 
         angle = p.start_angle
+
         for s in range(0, num_segments):
             x = p.center[0] + math.cos(angle) * p.radius
             y = p.center[1] + math.sin(angle) * p.radius
@@ -199,8 +211,32 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
                 if p.direction == "counterclockwise"
                 else angle - angle_delta
             )
+
     elif isinstance(p, AMOutlinePrimitive):
         return [make_v(point) for point in p.points]
+    elif isinstance(p, AMVectorLinePrimitive):
+        # A vector line with a given thickness - we turn this into a rotated rectangle
+        start_v = V.from_tuple(p.start)
+        end_v = V.from_tuple(p.end)
+
+        dir_v = end_v - start_v
+        # normalize direction vector
+        abs_dir_v = abs(dir_v)
+        if abs_dir_v:
+            dir_v = dir_v / abs_dir_v
+        else:
+            dir_v = V(0, 0)
+
+        # Give the direction vector the appropriate length
+        dir_v = cast(V, dir_v * p.width / 2)
+
+        v1 = start_v + dir_v.rotate(90, as_degrees=True)
+        v2 = start_v + dir_v.rotate(-90, as_degrees=True)
+        v3 = end_v + dir_v.rotate(-90, as_degrees=True)
+        v4 = end_v + dir_v.rotate(90, as_degrees=True)
+
+        return [v1, v2, v3, v4]
+
     elif isinstance(p, AMCommentPrimitive):
         return []
     else:
@@ -211,6 +247,7 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
 def create_outline_shape(outline) -> List[V]:
     outline.to_metric()
     outline_vertices: List[V] = []
+
     if outline.primitives:
         for p in outline.primitives:
             outline_vertices += primitive_to_shape(p)
