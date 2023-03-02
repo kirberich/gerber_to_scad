@@ -244,12 +244,15 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
     return vertices
 
 
-def create_outline_shape(outline) -> List[V]:
+def create_outline_shape(outline, force_box = False) -> List[V]:
     outline.to_metric()
     outline_vertices: List[V] = []
 
-    if outline.primitives:
+    if outline.primitives and not force_box:
         for p in outline.primitives:
+            if type(p) == primitives.AMGroup:
+                print(f"Ignoring AMGroup {p}")
+                continue
             outline_vertices += primitive_to_shape(p)
     else:
         # For some reason, some boards don't have any primitives but just some rectangular bounds
@@ -472,9 +475,17 @@ def process_gerber(
     increase_hole_size_by=0.0,
     simplify_regions=False,
     flip_stencil=False,
+    stencil_width=0,
+    stencil_height=0,
+    stencil_margin=0,
 ):
     """Convert gerber outline and solderpaste files to an scad file."""
-    outline_shape = create_outline_shape(outline_file)
+    if outline_file:
+        outline_shape = create_outline_shape(outline_file)
+    else:
+        outline_shape = create_outline_shape(solderpaste_file, force_box=True)
+        outline_shape = geometry.bounding_box(outline_shape, width=stencil_width, height=stencil_height, margin=stencil_margin)
+
     cutout_polygon = create_cutouts(
         solderpaste_file,
         increase_hole_size_by=increase_hole_size_by,
