@@ -9,7 +9,7 @@ def bounding_box(shape, width = 0, height = 0, margin = 0) -> Tuple[V, V, V, V]:
     max_x = max(shape, key=lambda v: v[0])[0]
     min_y = min(shape, key=lambda v: v[1])[1]
     max_y = max(shape, key=lambda v: v[1])[1]
-    if (width > 0 and height > 0) or margin > 0:
+    if (float(width or 0) > 0 and float(height or 0) > 0) or float(margin or 0) > 0:
         if margin > 0:
             margin_x = margin
             margin_y = margin

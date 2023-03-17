@@ -46,7 +46,7 @@ def main(request):
                 "Invalid format, is this a valid gerber file?"
             ]
 
-        if solder_paste:
+        if not form.errors:
             output = process_gerber(
                 outline,
                 solder_paste,

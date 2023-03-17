@@ -2,11 +2,11 @@ from django import forms
 
 
 class UploadForm(forms.Form):
+    solderpaste_file = forms.FileField(label="Solder paste layer file")
     outline_file = forms.FileField(
         label="Outline layer file",
         required=False
     )
-    solderpaste_file = forms.FileField(label="Solder paste layer file")
     stencil_thickness = forms.FloatField(
         label="Thickness (in mm) of the stencil. Make sure this is a multiple of the layer height you use for printing.",
         initial=0.2,

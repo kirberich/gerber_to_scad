@@ -244,34 +244,42 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
     return vertices
 
 
-def create_outline_shape(outline, force_box = False) -> List[V]:
+def create_outline_shape_rect(outline) -> List[V]:
     outline.to_metric()
     outline_vertices: List[V] = []
 
-    if outline.primitives and not force_box:
+    # For some reason, some boards don't have any primitives but just some rectangular bounds
+    # In that case, we just use those bounds as a rectangle defining the board
+    # To make matters worse, the bounds aren't stored in the usual shape format but rather as
+    # ((min_x, max_x), (min_y, max_y))
+
+    bounds = outline.bounds
+    min_x, max_x = bounds[0]
+    min_y, max_y = bounds[1]
+
+    outline_vertices += [
+        V(min_x, min_y),
+        V(min_x, max_y),
+        V(max_x, max_y),
+        V(max_x, min_y),
+    ]
+
+    return geometry.convex_hull(outline_vertices)
+
+
+def outline_shape_from_file(outline) -> List[V]:
+    outline.to_metric()
+    outline_vertices: List[V] = []
+
+    if outline.primitives:
         for p in outline.primitives:
             if type(p) == primitives.AMGroup:
                 print(f"Ignoring AMGroup {p}")
                 continue
             outline_vertices += primitive_to_shape(p)
+        return geometry.convex_hull(outline_vertices)
     else:
-        # For some reason, some boards don't have any primitives but just some rectangular bounds
-        # In that case, we just use those bounds as a rectangle defining the board
-        # To make matters worse, the bounds aren't stored in the usual shape format but rather as
-        # ((min_x, max_x), (min_y, max_y))
-
-        bounds = outline.bounds
-        min_x, max_x = bounds[0]
-        min_y, max_y = bounds[1]
-
-        outline_vertices += [
-            V(min_x, min_y),
-            V(min_x, max_y),
-            V(max_x, max_y),
-            V(max_x, min_y),
-        ]
-
-    return geometry.convex_hull(outline_vertices)
+        return create_outline_shape_rect(outline)
 
 
 def offset_shape(shape: List[V], offset, inside=False) -> List[V]:
@@ -481,10 +489,10 @@ def process_gerber(
 ):
     """Convert gerber outline and solderpaste files to an scad file."""
     if outline_file:
-        outline_shape = create_outline_shape(outline_file)
+        outline_shape = outline_shape_from_file(outline_file)
     else:
-        outline_shape = create_outline_shape(solderpaste_file, force_box=True)
-        outline_shape = geometry.bounding_box(outline_shape, width=stencil_width, height=stencil_height, margin=stencil_margin)
+        outline_shape_rect = create_outline_shape_rect(solderpaste_file)
+        outline_shape = geometry.bounding_box(outline_shape_rect, width=stencil_width, height=stencil_height, margin=stencil_margin)
 
     cutout_polygon = create_cutouts(
         solderpaste_file,
