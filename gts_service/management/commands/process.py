@@ -16,8 +16,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        with open(options["outline_file"], "r") as outline_file:
-            outline = gerber.loads(outline_file.read())
+        if options["outline_file"]:
+            with open(options["outline_file"], "r") as outline_file:
+                outline = gerber.loads(outline_file.read())
 
         with open(options["paste_file"], "r") as paste_file:
             paste = gerber.loads(paste_file.read())

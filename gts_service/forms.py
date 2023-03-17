@@ -2,8 +2,11 @@ from django import forms
 
 
 class UploadForm(forms.Form):
-    outline_file = forms.FileField(label="Outline layer file")
     solderpaste_file = forms.FileField(label="Solder paste layer file")
+    outline_file = forms.FileField(
+        label="Outline layer file",
+        required=False
+    )
     stencil_thickness = forms.FloatField(
         label="Thickness (in mm) of the stencil. Make sure this is a multiple of the layer height you use for printing.",
         initial=0.2,
@@ -33,5 +36,20 @@ class UploadForm(forms.Form):
     flip_stencil = forms.BooleanField(
         label="Flip the stencil (use this for bottom layer stencils)",
         initial=False,
+        required=False,
+    )
+    stencil_width = forms.FloatField(
+        label="Force width of the stencil (in mm) when outline file is not specified.",
+        initial=0.0,
+        required=False,
+    )
+    stencil_height = forms.FloatField(
+        label="Force height of the stencil (in mm) when outline file is not specified.",
+        initial=0.0,
+        required=False,
+    )
+    stencil_margin = forms.FloatField(
+        label="Set this to create rectangular area with specified margin (in mm) to use it as outline if outline file is not specified.",
+        initial=0.0,
         required=False,
     )
