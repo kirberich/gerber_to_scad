@@ -25,15 +25,17 @@ def main(request):
     if form.is_valid():
         outline_file = form.cleaned_data["outline_file"]
         solderpaste_file = request.FILES["solderpaste_file"]
+        outline = None
 
-        try:
-            outline = gerber.loads(outline_file.read().decode("utf-8"))
-        except Exception as e:
-            logging.error(e)
-            outline = None
-            form.errors["outline_file"] = [
-                "Invalid format, is this a valid gerber file?"
-            ]
+        if outline_file:
+            try:
+                outline = gerber.loads(outline_file.read().decode("utf-8"))
+            except Exception as e:
+                logging.error(e)
+                outline = None
+                form.errors["outline_file"] = [
+                    "Invalid format, is this a valid gerber file?"
+                ]
 
         try:
             solder_paste = gerber.loads(solderpaste_file.read().decode("utf-8"))
@@ -44,7 +46,7 @@ def main(request):
                 "Invalid format, is this a valid gerber file?"
             ]
 
-        if outline and solder_paste:
+        if not form.errors:
             output = process_gerber(
                 outline,
                 solder_paste,
@@ -55,6 +57,9 @@ def main(request):
                 form.cleaned_data["increase_hole_size_by"],
                 form.cleaned_data["simplify_regions"],
                 flip_stencil=form.cleaned_data["flip_stencil"],
+                stencil_width=form.cleaned_data["stencil_width"],
+                stencil_height=form.cleaned_data["stencil_height"],
+                stencil_margin=form.cleaned_data["stencil_margin"],
             )
 
             file_id = randint(1000000000, 9999999999)

@@ -4,11 +4,20 @@ from .vector import V
 from typing import Tuple, List
 
 
-def bounding_box(shape) -> Tuple[V, V, V, V]:
+def bounding_box(shape, width = 0, height = 0, margin = 0) -> Tuple[V, V, V, V]:
     min_x = min(shape, key=lambda v: v[0])[0]
     max_x = max(shape, key=lambda v: v[0])[0]
     min_y = min(shape, key=lambda v: v[1])[1]
     max_y = max(shape, key=lambda v: v[1])[1]
+    if (float(width or 0) > 0 and float(height or 0) > 0) or float(margin or 0) > 0:
+        if margin > 0:
+            margin_x = margin
+            margin_y = margin
+        else:
+            margin_x = (width - (max_x - min_x)) / 2
+            margin_y = (height - (max_y - min_y)) / 2
+        return (V(min_x - margin_x, min_y - margin_y), V(min_x - margin_x, max_y + margin_y),
+                V(max_x + margin_x, max_y + margin_y), V(max_x + margin_x, min_y - margin_y))
     return (V(min_x, min_y), V(min_x, max_y), V(max_x, max_y), V(max_x, min_y))
 
 
