@@ -1,11 +1,9 @@
 # Basic vector maths class
 import math
-from typing import Union
-from functools import singledispatchmethod
 
 
 class V(object):
-    def __init__(self, x=0, y=0):
+    def __init__(self, x: float = 0, y: float = 0):
         self.x = float(x)
         self.y = float(y)
 
