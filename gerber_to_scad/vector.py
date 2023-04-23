@@ -127,4 +127,7 @@ class V(object):
         other = float(other)
         return V(self.x / other, self.y / other)
 
+    def __eq__(self, other: "V") -> bool:
+        return self.x == other.x and self.y == other.y
+
     __truediv__ = __div__
