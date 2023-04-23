@@ -284,7 +284,7 @@ def outline_shape_from_file(outline) -> List[V]:
 
 def offset_shape(shape: List[V], offset, inside=False) -> List[V]:
     """Offset a shape by <offset> mm."""
-    print(shape)
+
     return [
         V(p[0], p[1])
         for p in utils.offset_points(
