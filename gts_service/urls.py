@@ -13,10 +13,10 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url
+from django.urls import path
 
 from gts_service import views
 
 urlpatterns = [
-    url(r"^$", views.main),
+    path("", views.main),
 ]
