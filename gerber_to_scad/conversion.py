@@ -113,6 +113,7 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
         if not in_region and gerber_helpers.has_wide_aperture(
             p.aperture, length=length
         ):
+
             vertices = rect_from_line(p)
         else:
             v1 = make_v(p.start)
@@ -283,21 +284,11 @@ def outline_shape_from_file(outline) -> List[V]:
 
 def offset_shape(shape: List[V], offset, inside=False) -> List[V]:
     """Offset a shape by <offset> mm."""
-
-    # Filter out duplicated points (shouldn't exist in the first place, but seem to in some files)
-    last_point = None
-    filtered_points = []
-    for p in shape:
-        if not last_point or p != last_point:
-            filtered_points.append(p)
-            last_point = p
-
+    print(shape)
     return [
         V(p[0], p[1])
         for p in utils.offset_points(
-            [v.as_tuple() for v in filtered_points],
-            offset,
-            internal=inside,
+            [v.as_tuple() for v in shape], offset, internal=inside  # type: ignore
         )
     ]
 
