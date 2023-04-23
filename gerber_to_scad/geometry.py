@@ -14,8 +14,8 @@ def bounding_box(shape, width = 0, height = 0, margin = 0) -> Tuple[V, V, V, V]:
             margin_x = margin
             margin_y = margin
         else:
-            margin_x = int((width - (max_x - min_x))/2)
-            margin_y = int((height - (max_y - min_y))/2)
+            margin_x = (width - (max_x - min_x)) / 2
+            margin_y = (height - (max_y - min_y)) / 2
         return (V(min_x - margin_x, min_y - margin_y), V(min_x - margin_x, max_y + margin_y),
                 V(max_x + margin_x, max_y + margin_y), V(max_x + margin_x, min_y - margin_y))
     return (V(min_x, min_y), V(min_x, max_y), V(max_x, max_y), V(max_x, min_y))
