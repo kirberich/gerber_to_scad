@@ -12,7 +12,7 @@ from gerber.am_statements import (
     AMVectorLinePrimitive,
 )
 
-from solid import polygon, scad_render, union, linear_extrude, rotate, mirror, translate
+from solid import polygon, scad_render, union, linear_extrude, rotate, mirror, translate, offset
 from solid import utils
 from .vector import V
 from . import geometry
@@ -282,13 +282,13 @@ def outline_shape_from_file(outline) -> List[V]:
         return create_outline_shape_rect(outline)
 
 
-def offset_shape(shape: List[V], offset, inside=False) -> List[V]:
+def offset_shape(shape: List[V], offset) -> List[V]:
     """Offset a shape by <offset> mm."""
 
     return [
         V(p[0], p[1])
         for p in utils.offset_points(
-            [v.as_tuple() for v in shape], offset, internal=inside  # type: ignore
+            [v.as_tuple() for v in shape], abs(offset), internal=offset < 0  # type: ignore
         )
     ]
 
@@ -466,9 +466,10 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
     cutout_shapes += lines_to_shapes(cutout_lines)
     polygons = []
     for shape in cutout_shapes:
+        shape_polygon = polygon([(x, y) for x, y in shape])
         if increase_hole_size_by and len(shape) > 2:
-            shape = offset_shape(shape, increase_hole_size_by)
-        polygons.append(polygon([(x, y) for x, y in shape]))
+            shape_polygon = offset(delta=increase_hole_size_by)(shape_polygon)
+        polygons.append(shape_polygon)
 
     return union()(*polygons)
 
@@ -510,7 +511,7 @@ def process_gerber(
 
     if gap:
         # Add a gap around the outline
-        outline_shape = offset_shape(outline_shape, gap)
+        outline_shape = offset_shape(list(outline_shape), gap)
     outline_polygon = polygon([v.as_tuple() for v in outline_shape])
 
     # Move the polygons to be centered around the origin
@@ -528,7 +529,7 @@ def process_gerber(
     stencil = linear_extrude(height=stencil_thickness)(outline_polygon - cutout_polygon)
 
     if include_ledge:
-        ledge_shape = offset_shape(outline_shape, 1.2)
+        ledge_shape = offset_shape(list(outline_shape), 1.2)
         ledge_polygon = translate((-outline_offset[0], -outline_offset[1], 0))(polygon([v.as_tuple() for v in ledge_shape]))- outline_polygon
 
         # Cut the ledge in half by taking the bounding box of the outline, cutting it in half
