@@ -18,8 +18,7 @@ from .vector import V
 from . import geometry
 from . import gerber_helpers
 
-MAX_SEGMENT_LENGTH = 0.1
-
+MAX_SEGMENT_LENGTH = 0.2
 
 def combine_faces_into_shapes(faces):
     """Takes a list of faces and combines them into continuous shapes."""
