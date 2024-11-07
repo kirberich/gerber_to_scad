@@ -1,7 +1,69 @@
-{% extends "base.html" %}
-{% load bootstrap3 %}
+{% extends "base.html" %} {% load bootstrap3 %} {% block extra_head %}
+<script>
+$( document ).ready(function() {
+  $(".collapse-checkbox").change(function(){
+    if (this.checked) {
+      $(this).closest('.collapse-container').find('.collapse-content').addClass('expanded');
+    } else {
+      $(this).closest('.collapse-container').find('.collapse-content').removeClass('expanded');
+    }
+  });
 
-{% block body %}
+  $(".manual-stencil-size").change(function(){
+    if (this.checked) {
+      $("#id_outline_file").attr('disabled', 'disabled');
+    } else {
+      $("#id_outline_file").removeAttr('disabled');
+    }
+  })
+
+  $(".include-frame").change(function(){
+    if (this.checked) {
+      $(".include-ledge").attr('checked', false).trigger('change');
+    }
+
+  })
+
+  $(".include-ledge").change(function(){
+    if (this.checked) {
+      $(".include-frame").attr('checked', false).trigger('change');
+    }
+  })
+
+});
+</script>
+<style>
+  label {
+    font-weight: normal;
+  }
+  .warning {
+    font-weight: bold;
+    color: #aa2200;
+  }
+  .upload-form-group {
+    border: 1px solid #aaa;
+    padding: 10px;
+    width: 50%;
+  }
+  .upload-form-group h4 {
+    font-size:1em;
+    margin:0;
+    margin-bottom:10px;
+  }
+  .form-group:last-of-type {
+    margin-bottom:0;
+  }
+  .collapse-content {
+    display: none;
+  }
+  .collapse-content.expanded {
+    display: inherit;
+  }
+  input[type="checkbox"] {
+    margin-right: 5px;
+  }
+</style>
+{% endblock extra_head %} {% block body %}
 <div class="container">
   <div class="panel panel-default">
     <div class="panel-heading">
@@ -17,7 +79,9 @@
         <em>your_project_pasteMaskTop.gtp</em> for the paste layer.
       </p>
 
-      <p>This site is untested, unfinished, unpolished and unlikely to work for anything serious. Good luck.</p>
+      <p class="warning">
+        This site is untested, unfinished, unpolished and unlikely to work for anything serious. Good luck.
+      </p>
     </div>
   </div>
 
@@ -26,14 +90,54 @@
       <h3 class="panel-title">File Upload</h3>
     </div>
     <div class="panel-body">
-      <p><strong>See bottom of the page for some usage hints.</strong></p>
+      <p><strong>ℹ️ See bottom of the page for some usage hints.</strong></p>
+      <hr/>
       <form action="" method="POST" enctype="multipart/form-data" class="form">
         {% csrf_token %}
-        {% bootstrap_form form %}
+
+        <h4>Files</h4>
+        {% bootstrap_field form.solderpaste_file  %}
+        {% bootstrap_field form.outline_file  %}
+        <div class='upload-form-group collapse-container'>
+          <input type='checkbox' class='collapse-checkbox manual-stencil-size' id='manual-stencil'/><label for='manual-stencil'>Define stencil size manually instead of from outline file.</label>
+          <div class="collapse-content">
+          {% bootstrap_field form.stencil_width  %}
+          {% bootstrap_field form.stencil_height  %}
+          {% bootstrap_field form.stencil_margin  %}
+          </div>
+        </div>
+        <hr/>
+
+        <h4>Processing Options</h4>
+        {% bootstrap_field form.simplify_regions  %}
+        {% bootstrap_field form.flip_stencil  %}
+        {% bootstrap_field form.stencil_thickness  %}
+        {% bootstrap_field form.increase_hole_size_by  %}
+        {% bootstrap_field form.gap  %}
+        <hr/>
+
+        <h4>Ledge</h4>
+        <div class='collapse-container'>
+          {% bootstrap_field form.include_ledge  %}
+          <div class="collapse-content expanded">
+            {% bootstrap_field form.ledge_thickness  %}
+          </div>
+        </div>
+        <hr/>
+
+        <h4>Frame</h4>
+        <div class='collapse-container'>
+          {% bootstrap_field form.include_frame  %}
+          <div class="collapse-content">
+            {% bootstrap_field form.frame_width  %}
+            {% bootstrap_field form.frame_height  %}
+            {% bootstrap_field form.frame_thickness  %}
+          </div>
+        </div>
+        <hr/>
+
         {% buttons %}
-        <button type="submit" class="btn btn-primary">
-          Convert to STL
-        </button>
+        <button type="submit" class="btn btn-primary">Convert to STL</button>
         {% endbuttons %}
       </form>
     </div>
@@ -53,9 +157,6 @@
           If this happens, increase the hole size very slightly (like 0.001mm) to make the holes overlap.</li>
         <li>The thicker the stencil and the smaller the solder pads, the more paste will stick to the stencil. If you're
           not getting enough paste on the pads, make the holes bigger or reduce the stencil thickness.</li>
-        <li>If you deactivate ledge inclusion, you can still use the "gap between stencil and ledge" option to increase
-          the size of the stencil outside of the board. This might come in useful if you're using a stencil frame or
-          jig.</li>
         <li>If you've got a file that's not working right, send it to me at <a
             href="mailto:rob@kirberich.uk">rob@kirberich.uk</a> and I'll have a look to see what's up.</li>
       </ul>

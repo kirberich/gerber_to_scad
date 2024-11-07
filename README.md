@@ -22,7 +22,7 @@ You should now be able to run the script. You'll get some information on availab
 
 ```bash
 (env) $ python main.py -h
-usage: main.py [-h] [-t THICKNESS] [-n] [-L LEDGE_HEIGHT] [-g GAP]
+usage: main.py [-h] [-t THICKNESS] [-n] [-L LEDGE_THICKNESS] [-g GAP]
                          [-i INCREASE_HOLE_SIZE]
                          outline_file solderpaste_file output_file
 
@@ -42,8 +42,8 @@ optional arguments:
   -n, --no-ledge        By default, a ledge around half the outline of the
                         board is included, to allow aligning the stencil
                         easily. Pass this to exclude this ledge.
-  -L LEDGE_HEIGHT, --ledge-height LEDGE_HEIGHT
-                        Height of the stencil ledge. This should be less than
+  -L LEDGE_THICKNESS, --ledge-thickness LEDGE_THICKNESS
+                        Thickness of the stencil ledge. This should be less than
                         the thickness of the PCB (default: 1.2)
   -g GAP, --gap GAP     Gap (in mm) between board and stencil ledge. Increase
                         this if the fit of the stencil is too tight (default:

@@ -30,10 +30,10 @@ if __name__ == "__main__":
     parser.set_defaults(include_ledge=True)
     parser.add_argument(
         "-L",
-        "--ledge-height",
+        "--ledge-thickness",
         type=float,
         default=1.2,
-        help="Height of the stencil ledge. This should be less than the "
+        help="Thickness of the stencil ledge. This should be less than the "
         "thickness of the PCB (default: %(default)0.1f)",
     )
     parser.add_argument(
@@ -69,13 +69,21 @@ if __name__ == "__main__":
     with open(args.output_file, "w") as output_file:
         output_file.write(
             process_gerber(
-                outline,
-                solder_paste,
-                args.thickness,
-                args.include_ledge,
-                args.ledge_height,
-                args.gap,
-                args.increase_hole_size,
+                outline_file=outline,
+                solderpaste_file=solder_paste,
+                stencil_thickness=args.thickness,
+                include_ledge=args.include_ledge,
+                ledge_thickness=args.ledge_thickness,
+                gap=args.gap,
+                increase_hole_size_by=args.increase_hole_size,
                 flip_stencil=args.flip,
+                include_frame=False,
+                frame_width=0,
+                frame_height=0,
+                frame_thickness=1.2,
+                simplify_regions=False,
+                stencil_width=0,
+                stencil_height=0,
+                stencil_margin=0,
             )
         )

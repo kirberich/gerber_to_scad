@@ -4,7 +4,7 @@ from .vector import V
 from typing import Tuple, List
 
 
-def bounding_box(shape, width = 0, height = 0, margin = 0) -> Tuple[V, V, V, V]:
+def bounding_box(shape, width: float = 0, height: float = 0, margin: float = 0) -> Tuple[V, V, V, V]:
     min_x = min(shape, key=lambda v: v[0])[0]
     max_x = max(shape, key=lambda v: v[0])[0]
     min_y = min(shape, key=lambda v: v[1])[1]

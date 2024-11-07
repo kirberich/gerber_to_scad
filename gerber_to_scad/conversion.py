@@ -474,18 +474,23 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
 
 
 def process_gerber(
+        *,
     outline_file,
     solderpaste_file,
-    stencil_thickness=0.2,
-    include_ledge=True,
-    ledge_height=1.2,
-    ledge_gap=0.0,
-    increase_hole_size_by=0.0,
-    simplify_regions=False,
-    flip_stencil=False,
-    stencil_width=0,
-    stencil_height=0,
-    stencil_margin=0,
+    stencil_thickness: float,
+    include_ledge: bool,
+    ledge_thickness: float,
+    gap: float,
+    include_frame: bool,
+    frame_width: float,
+    frame_height: float,
+    frame_thickness: float,
+    increase_hole_size_by: float,
+    simplify_regions: bool,
+    flip_stencil: bool,
+    stencil_width: float,
+    stencil_height: float,
+    stencil_margin: float,
 ):
     """Convert gerber outline and solderpaste files to an scad file."""
     if outline_file:
@@ -503,9 +508,9 @@ def process_gerber(
     # debugging!
     # return scad_render(linear_extrude(height=stencil_thickness)(polygon(outline_shape)))
 
-    if ledge_gap:
-        # Add a gap between the ledge and the stencil
-        outline_shape = offset_shape(outline_shape, ledge_gap)
+    if gap:
+        # Add a gap around the outline
+        outline_shape = offset_shape(outline_shape, gap)
     outline_polygon = polygon([v.as_tuple() for v in outline_shape])
 
     if flip_stencil:
@@ -540,10 +545,18 @@ def process_gerber(
 
         ledge_polygon = ledge_polygon - polygon([v.as_tuple() for v in cutter])
 
-        ledge = utils.down(ledge_height - stencil_thickness)(
-            linear_extrude(height=ledge_height)(ledge_polygon)
+        ledge = utils.down(ledge_thickness - stencil_thickness)(
+            linear_extrude(height=ledge_thickness)(ledge_polygon)
         )
         stencil = ledge + stencil
+    elif include_frame:
+        frame_shape = geometry.bounding_box(outline_shape, width=frame_width, height=frame_height)
+        frame_polygon = polygon([v.as_tuple() for v in frame_shape]) - outline_polygon
+
+        frame = utils.down(frame_thickness - stencil_thickness)(
+            linear_extrude(height=frame_thickness)(frame_polygon)
+        )
+        stencil = frame + stencil
 
     # Rotate the stencil to make it printable
     stencil = rotate(a=180, v=(1, 0, 0))(stencil)
