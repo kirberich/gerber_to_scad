@@ -94,6 +94,7 @@ $( document ).ready(function() {
       <hr/>
       <form action="" method="POST" enctype="multipart/form-data" class="form">
         {% csrf_token %}
+        {% bootstrap_form_errors form type='non_fields' %}
 
         <h4>Files</h4>
         {% bootstrap_field form.solderpaste_file  %}
