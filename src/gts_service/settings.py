@@ -10,7 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
+from __future__ import annotations
+
 import os
+
 import environ
 
 env = environ.Env()

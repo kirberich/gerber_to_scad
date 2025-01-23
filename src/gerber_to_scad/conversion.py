@@ -1,24 +1,35 @@
+from __future__ import annotations
+
 import math
 from copy import copy
 from typing import List, Tuple, cast
 
 from gerber import primitives
 from gerber.am_statements import (
-    AMOutlinePrimitive,
     AMCenterLinePrimitive,
     AMCirclePrimitive,
-    AMPrimitive,
     AMCommentPrimitive,
+    AMOutlinePrimitive,
+    AMPrimitive,
     AMVectorLinePrimitive,
 )
+from solid import (
+    linear_extrude,
+    mirror,
+    offset,
+    polygon,
+    rotate,
+    scad_render,
+    translate,
+    union,
+    utils,
+)
 
-from solid import polygon, scad_render, union, linear_extrude, rotate, mirror, translate, offset
-from solid import utils
+from . import geometry, gerber_helpers
 from .vector import V
-from . import geometry
-from . import gerber_helpers
 
 MAX_SEGMENT_LENGTH = 0.2
+
 
 def combine_faces_into_shapes(faces):
     """Takes a list of faces and combines them into continuous shapes."""
@@ -35,12 +46,12 @@ def combine_faces_into_shapes(faces):
             # Face is already in the shape
             if v1 in shape and v2 in shape:
                 break
-            elif v1 in shape:
+            if v1 in shape:
                 vertex_index = shape.index(v1)
                 # insert after existing vertex
                 shape.insert(vertex_index + 1, v2)
                 break
-            elif v2 in shape:
+            if v2 in shape:
                 vertex_index = shape.index(v2)
                 # Insert before existing vertex
                 shape.insert(vertex_index, v1)
@@ -58,7 +69,8 @@ def make_v(v: Tuple[float, float], decimal_places=3) -> V:
 
 
 def rect_from_line(line: primitives.Line):
-    """Creates a rectangle from a line primitive by thickening it
+    """
+    Creates a rectangle from a line primitive by thickening it
     according to the primitive's aperture size.
 
     Treats rectangular apertures as square because otherwise the maths
@@ -92,7 +104,8 @@ def rect_from_line(line: primitives.Line):
 
 
 def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
-    """Turns a gerber primitive into an scad shape.
+    """
+    Turns a gerber primitive into an scad shape.
 
     If in_region is True, all shapes are assumed to be contours only, ignoring apertures.
     """
@@ -112,7 +125,6 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
         if not in_region and gerber_helpers.has_wide_aperture(
             p.aperture, length=length
         ):
-
             vertices = rect_from_line(p)
         else:
             v1 = make_v(p.start)
@@ -124,7 +136,7 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
         num_segments = max(1, int(round(circ / MAX_SEGMENT_LENGTH)))
 
         # Generate vertexes for each segment around the circle
-        for s in range(0, num_segments):
+        for s in range(num_segments):
             angle = s * (2 * math.pi / num_segments)
             x = p.position[0] + math.cos(angle) * p.diameter / 2
             y = p.position[1] + math.sin(angle) * p.diameter / 2
@@ -188,11 +200,10 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
                 sweep_angle = 360 - (p.start_angle - p.end_angle)
             else:
                 sweep_angle = p.start_angle - p.end_angle
+        elif p.end_angle >= p.start_angle:
+            sweep_angle = 360 - (p.end_angle - p.start_angle)
         else:
-            if p.end_angle >= p.start_angle:
-                sweep_angle = 360 - (p.end_angle - p.start_angle)
-            else:
-                sweep_angle = p.start_angle - p.end_angle
+            sweep_angle = p.start_angle - p.end_angle
 
         arc_length = p.radius * sweep_angle
         num_segments = max(1, int(round(arc_length / MAX_SEGMENT_LENGTH)))
@@ -200,7 +211,7 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
 
         angle = p.start_angle
 
-        for s in range(0, num_segments):
+        for s in range(num_segments):
             x = p.center[0] + math.cos(angle) * p.radius
             y = p.center[1] + math.sin(angle) * p.radius
             vertices.append(make_v((x, y)))
@@ -239,7 +250,7 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
     elif isinstance(p, AMCommentPrimitive):
         return []
     else:
-        raise NotImplementedError("Unexpected primitive type {}".format(type(p)))
+        raise NotImplementedError(f"Unexpected primitive type {type(p)}")
     return vertices
 
 
@@ -266,34 +277,35 @@ def create_outline_shape_rect(outline) -> List[V]:
     return geometry.convex_hull(outline_vertices)
 
 
-def outline_shape_from_file(outline) -> List[V]:
+def outline_shape_from_file(outline) -> Tuple[V, ...]:
     outline.to_metric()
     outline_vertices: List[V] = []
 
     if outline.primitives:
         for p in outline.primitives:
-            if type(p) == primitives.AMGroup:
+            if isinstance(p, primitives.AMGroup):
                 print(f"Ignoring AMGroup {p}")
                 continue
             outline_vertices += primitive_to_shape(p)
         return geometry.convex_hull(outline_vertices)
-    else:
-        return create_outline_shape_rect(outline)
+    return create_outline_shape_rect(outline)
 
 
-def offset_shape(shape: List[V], offset) -> List[V]:
+def offset_shape(shape: List[V], offset) -> Tuple[V]:
     """Offset a shape by <offset> mm."""
-
-    return [
+    return tuple([
         V(p[0], p[1])
         for p in utils.offset_points(
-            [v.as_tuple() for v in shape], abs(offset), internal=offset < 0  # type: ignore
+            [v.as_tuple() for v in shape],
+            abs(offset),
+            internal=offset < 0,  # type: ignore
         )
-    ]
+    ])
 
 
 def find_line_closest_to_point(point, lines):
-    """Finds the line from a list of lines that is closest to `point`.
+    """
+    Finds the line from a list of lines that is closest to `point`.
     Returns a bunch of information about the closest line.
     """
     d = float("inf")
@@ -317,7 +329,8 @@ def find_line_closest_to_point(point, lines):
 
 
 def lines_to_shapes(lines: List[List[V]]) -> List[List[V]]:
-    """Takes a list of lines and joins them together into shapes.
+    """
+    Takes a list of lines and joins them together into shapes.
 
     1) Starts the first shape with the first line
     2) Looks for other line segments that are close to its end points (first or last vertex)
@@ -452,7 +465,7 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
             pass
 
     for p in solder_paste.primitives:
-        if type(p) == primitives.AMGroup:
+        if isinstance(p, primitives.AMGroup):
             print(f"Ignoring AMGroup {p}")
             continue
         shape = primitive_to_shape(p, simplify_regions=simplify_regions)
@@ -474,7 +487,7 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
 
 
 def process_gerber(
-        *,
+    *,
     outline_file,
     solderpaste_file,
     stencil_thickness: float,
@@ -497,7 +510,12 @@ def process_gerber(
         outline_shape = outline_shape_from_file(outline_file)
     else:
         outline_shape_rect = create_outline_shape_rect(solderpaste_file)
-        outline_shape = geometry.bounding_box(outline_shape_rect, width=stencil_width, height=stencil_height, margin=stencil_margin)
+        outline_shape = geometry.bounding_box(
+            outline_shape_rect,
+            width=stencil_width,
+            height=stencil_height,
+            margin=stencil_margin,
+        )
 
     cutout_polygon = create_cutouts(
         solderpaste_file,
@@ -515,9 +533,13 @@ def process_gerber(
 
     # Move the polygons to be centered around the origin
     outline_bounds = geometry.bounding_box(outline_shape)
-    outline_offset =  outline_bounds[0] + (outline_bounds[2] - outline_bounds[0])/2
-    outline_polygon = translate((-outline_offset[0], -outline_offset[1], 0))(outline_polygon)
-    cutout_polygon = translate((-outline_offset[0], -outline_offset[1], 0))(cutout_polygon)
+    outline_offset = outline_bounds[0] + (outline_bounds[2] - outline_bounds[0]) / 2
+    outline_polygon = translate((-outline_offset[0], -outline_offset[1], 0))(
+        outline_polygon
+    )
+    cutout_polygon = translate((-outline_offset[0], -outline_offset[1], 0))(
+        cutout_polygon
+    )
 
     if flip_stencil:
         mirror_normal = (-1, 0, 0)
@@ -526,10 +548,14 @@ def process_gerber(
         cutout_polygon = mirror(mirror_normal)(cutout_polygon)
 
     stencil = linear_extrude(height=stencil_thickness)(outline_polygon - cutout_polygon)
-
     if include_ledge:
         ledge_shape = offset_shape(list(outline_shape), 1.2)
-        ledge_polygon = translate((-outline_offset[0], -outline_offset[1], 0))(polygon([v.as_tuple() for v in ledge_shape]))- outline_polygon
+        ledge_polygon = (
+            translate((-outline_offset[0], -outline_offset[1], 0))(
+                polygon([v.as_tuple() for v in ledge_shape])
+            )
+            - outline_polygon
+        )
 
         # Cut the ledge in half by taking the bounding box of the outline, cutting it in half
         # and removing the resulting shape from the ledge shape
@@ -545,15 +571,24 @@ def process_gerber(
             cutter[2].x -= width / 2
             cutter[3].x -= width / 2
 
-        ledge_polygon = ledge_polygon - translate((-outline_offset[0], -outline_offset[1], 0))(polygon([v.as_tuple() for v in cutter]))
+        ledge_polygon = ledge_polygon - translate(
+            (-outline_offset[0], -outline_offset[1], 0)
+        )(polygon([v.as_tuple() for v in cutter]))
 
         ledge = utils.down(ledge_thickness - stencil_thickness)(
             linear_extrude(height=ledge_thickness)(ledge_polygon)
         )
         stencil = ledge + stencil
     elif include_frame:
-        frame_shape = geometry.bounding_box(outline_shape, width=frame_width, height=frame_height)
-        frame_polygon = translate((-outline_offset[0], -outline_offset[1], 0))(polygon([v.as_tuple() for v in frame_shape])) - outline_polygon
+        frame_shape = geometry.bounding_box(
+            outline_shape, width=frame_width, height=frame_height
+        )
+        frame_polygon = (
+            translate((-outline_offset[0], -outline_offset[1], 0))(
+                polygon([v.as_tuple() for v in frame_shape])
+            )
+            - outline_polygon
+        )
 
         frame = utils.down(frame_thickness - stencil_thickness)(
             linear_extrude(height=frame_thickness)(frame_polygon)

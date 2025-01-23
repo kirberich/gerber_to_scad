@@ -33,3 +33,41 @@ gunicorn = "^20.1.0"
 build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core>=1.0.0"]
 
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+
+[tool.mypy]
+python_version = "3.8"
+files = "src"
+
+strict = false
+
+warn_return_any = false
+warn_redundant_casts = false
+warn_unused_ignores = false
+warn_unreachable = false
+
+disallow_untyped_defs = false
+no_implicit_optional = false
+
+show_error_context = false
+show_error_codes = false
+show_error_code_links = false
+show_column_numbers = false
+pretty = false
+
+exclude = [
+    "^tests/resources/*$"
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "django.*",
+    "environ",
+    "scipy.*",
+    "gerber.*",
+    "solid",
+
+]
+ignore_missing_imports = true
+

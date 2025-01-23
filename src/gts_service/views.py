@@ -1,25 +1,28 @@
-import os
-from random import randint
-import subprocess
+from __future__ import annotations
 
+import logging
+import os
+import subprocess
+from random import randint
+
+import gerber
 from django.conf import settings
+from django.http.request import HttpRequest
 from django.http.response import HttpResponse
 from django.shortcuts import render
 
-import gerber
 from gerber_to_scad import (
     process_gerber,
 )
 from gts_service.forms import UploadForm
-import logging
 
 
-def _get_version():
-    with open("version", "r") as f:
+def _get_version() -> str:
+    with open("version") as f:
         return f.read()
 
 
-def main(request):
+def main(request: HttpRequest) -> HttpResponse:
     form = UploadForm(request.POST or None, files=request.FILES or None)
     version = _get_version()
     if form.is_valid():
@@ -31,7 +34,7 @@ def main(request):
             try:
                 outline = gerber.loads(outline_file.read().decode("utf-8"))
             except Exception as e:
-                logging.error(e)
+                logging.exception(e)
                 outline = None
                 form.errors["outline_file"] = [
                     "Invalid format, is this a valid gerber file?"
@@ -40,7 +43,7 @@ def main(request):
         try:
             solder_paste = gerber.loads(solderpaste_file.read().decode("utf-8"))
         except Exception as e:
-            logging.error(e)
+            logging.exception(e)
             solder_paste = None
             form.errors["solderpaste_file"] = [
                 "Invalid format, is this a valid gerber file?"
@@ -54,7 +57,7 @@ def main(request):
                 include_ledge=form.cleaned_data["include_ledge"],
                 ledge_thickness=form.cleaned_data["ledge_thickness"],
                 gap=form.cleaned_data["gap"],
-                include_frame=form.cleaned_data['include_frame'],
+                include_frame=form.cleaned_data["include_frame"],
                 frame_width=form.cleaned_data["frame_width"],
                 frame_height=form.cleaned_data["frame_height"],
                 frame_thickness=form.cleaned_data["frame_thickness"],
@@ -67,8 +70,8 @@ def main(request):
             )
 
             file_id = randint(1000000000, 9999999999)
-            scad_filename = "/tmp/gts-{}.scad".format(file_id)
-            stl_filename = "/tmp/gts-{}.stl".format(file_id)
+            scad_filename = f"/tmp/gts-{file_id}.scad"
+            stl_filename = f"/tmp/gts-{file_id}.stl"
 
             with open(scad_filename, "w") as scad_file:
                 scad_file.write(output)
@@ -86,7 +89,7 @@ def main(request):
             if p.returncode:
                 form.errors["__all__"] = ["Failed to create an STL file from inputs"]
             else:
-                with open(stl_filename, "r") as stl_file:
+                with open(stl_filename) as stl_file:
                     stl_data = stl_file.read()
                 os.remove(stl_filename)
 

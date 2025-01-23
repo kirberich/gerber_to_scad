@@ -1,7 +1,9 @@
 """Helpers for dealing with gerber files."""
 
+from __future__ import annotations
 
-def get_aperture_size(aperture):
+
+def get_aperture_size(aperture) -> int:
     diameter = getattr(aperture, "diameter", 0)
     width = getattr(aperture, "width", 0)
     height = getattr(aperture, "height", 0)
@@ -9,8 +11,9 @@ def get_aperture_size(aperture):
     return diameter or width or height
 
 
-def has_wide_aperture(aperture, length=None):
-    """Returns True if an aperture is large compared to a given line length,
+def has_wide_aperture(aperture, length) -> bool:
+    """
+    Returns True if an aperture is large compared to a given line length,
 
     or, if no line length is given, if it's non-zero.
     """
