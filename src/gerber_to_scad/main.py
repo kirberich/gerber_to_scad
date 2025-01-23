@@ -2,7 +2,7 @@ import argparse
 from gerber_to_scad import process_gerber
 import gerber
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="Convert gerber files to an scad 3d printable solder stencil."
     )
@@ -87,3 +87,6 @@ if __name__ == "__main__":
                 stencil_margin=0,
             )
         )
+
+if __name__ == "__main__":
+    main()

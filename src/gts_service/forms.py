@@ -4,9 +4,9 @@ from django import forms
 forms.Widget()
 
 class UploadForm(forms.Form):
-    solderpaste_file = forms.FileField(label="Solder paste layer file")
+    solderpaste_file = forms.FileField(label="Solder paste layer file, ends with '.gtp'")
     outline_file = forms.FileField(
-        label="Outline layer file (Optional)",
+        label="Outline layer file, ends with '.gko' (Optional)",
         required=False,
         help_text='Outline of the board used to create the stencil. To create a stencil of different size, use the options below instead.'
     )
