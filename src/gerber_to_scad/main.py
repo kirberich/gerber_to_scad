@@ -1,8 +1,13 @@
+from __future__ import annotations
+
 import argparse
-from gerber_to_scad import process_gerber
+
 import gerber
 
-if __name__ == "__main__":
+from gerber_to_scad import process_gerber
+
+
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Convert gerber files to an scad 3d printable solder stencil."
     )
@@ -61,8 +66,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    outline_file = open(args.outline_file, "r")
-    solderpaste_file = open(args.solderpaste_file, "r")
+    outline_file = open(args.outline_file)
+    solderpaste_file = open(args.solderpaste_file)
 
     outline = gerber.loads(outline_file.read())
     solder_paste = gerber.loads(solderpaste_file.read())
@@ -87,3 +92,7 @@ if __name__ == "__main__":
                 stencil_margin=0,
             )
         )
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,50 @@
+---
+variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+    POETRY_VIRTUALENVS_IN_PROJECT: "`True`"
+
+.poetry_install:
+  before_script:
+    - export PATH="$PATH:$HOME/.local/bin"
+    - pip install --upgrade poetry==1.7.1
+
+stages:
+  - analysis
+  - build
+  - release
+
+default:
+  image:
+    name: python:3.13
+  tags:
+    - karl
+  before_script:
+    - !reference [ .poetry_install, before_script ]
+    - poetry install --all-extras
+
+  cache:
+    paths:
+      - .venv
+
+poetry lockfile check:
+  before_script: !reference [ .poetry_install, before_script ]
+  script:
+    - poetry check --lock
+
+format:
+  stage: test
+  script:
+    - ./ci/format.sh --check
+
+lint:
+  stage: test
+  script:
+    - ./ci/lint.sh --output-format pylint | tee lint.report
+    - ./ci/lint.sh --output-format gitlab | tee codequality.report
+  artifacts:
+    reports:
+      codequality:
+        - codequality.report
+    paths:
+      - lint.report
+    expire_in: 1 day

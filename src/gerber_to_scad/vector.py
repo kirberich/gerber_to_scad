@@ -1,8 +1,10 @@
 # Basic vector maths class
+from __future__ import annotations
+
 import math
 
 
-class V(object):
+class V:
     def __init__(self, x: float = 0, y: float = 0):
         self.x = float(x)
         self.y = float(y)
@@ -40,7 +42,8 @@ class V(object):
 
     @classmethod
     def point_line_projection(cls, v1, v2, p, limit_to_segment=False):
-        """Returns the projection of the point p on the line defined
+        """
+        Returns the projection of the point p on the line defined
         by the two endpoints v1 and v2
         """
         d = v2 - v1
@@ -72,11 +75,12 @@ class V(object):
         return other
 
     def cross(self, other):
-        """cross product"""
+        """Cross product"""
         return V(self.x * other.y - other.x * self.y)
 
     def rotate(self, theta, as_degrees=False):
-        """Adapted from https://gist.github.com/mcleonard/5351452.
+        """
+        Adapted from https://gist.github.com/mcleonard/5351452.
         Rotate this vector by theta in degrees.
         """
         if as_degrees:
@@ -125,7 +129,9 @@ class V(object):
         other = float(other)
         return V(self.x / other, self.y / other)
 
-    def __eq__(self, other: "V") -> bool:
+    def __eq__(self, other: object) -> bool:  # typing: ignore[override]
+        if not isinstance(other, V):
+            return NotImplemented
         return self.x == other.x and self.y == other.y
 
     __truediv__ = __div__
