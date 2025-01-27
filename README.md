@@ -1,11 +1,14 @@
 # gerber_to_scad
 Simple python script for converting gerber files into a 3d printable solder stencil scad file
 
-## Installation
-gerber to scad requires python3.9
+This repository has both a CLI tool, and a web app available at https://solder-stencil.me.
 
-* Make sure you have (poetry)[https://python-poetry.org/docs/] installed
-* Run poetry install
+## Installation
+
+`gerber_to_scad` requires python3.9.
+
+* Make sure you have [poetry](https://python-poetry.org/docs/) installed.
+* Run `poetry install`.
 
 Note: on M1 macs, scipy doesn't install correctly out of the box. If you're getting installation errors, try this:
 
@@ -21,7 +24,9 @@ poetry install
 You should now be able to run the script. You'll get some information on available options if you run it with the -h argument:
 
 ```bash
-(env) $ python main.py -h
+(env) $ gerber_to_scad -h
+# Or:
+(env) $ python -m gerber_to_scad -h
 usage: main.py [-h] [-t THICKNESS] [-n] [-L LEDGE_THICKNESS] [-g GAP]
                          [-i INCREASE_HOLE_SIZE]
                          outline_file solderpaste_file output_file
@@ -57,5 +62,5 @@ optional arguments:
 For basic usage, simply run the script with input files for the gerber outline and solderpaste files and specify an output:
 
 ```bash
-python main.py outline_file.gko toppaste_file.gtp output.scad
+gerber_to_scad outline_file.gko toppaste_file.gtp output.scad
 ```
