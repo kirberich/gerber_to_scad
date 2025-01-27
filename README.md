@@ -64,3 +64,9 @@ For basic usage, simply run the script with input files for the gerber outline a
 ```bash
 gerber_to_scad outline_file.gko toppaste_file.gtp output.scad
 ```
+
+## Contributing
+
+Contributions are very welcome, I don't have a lot of time to spend on this project, but I try to review PRs as much as I can!
+
+* Please use ruff to format your code - if you use VS code, you can open the `gerber_to_scad.code-workspace` file to get all the right automatic formatting in your editor, or you can just run `ruff format .` in the project root.
