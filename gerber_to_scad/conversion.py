@@ -12,13 +12,23 @@ from gerber.am_statements import (
     AMVectorLinePrimitive,
 )
 
-from solid import polygon, scad_render, union, linear_extrude, rotate, mirror, translate, offset
+from solid import (
+    polygon,
+    scad_render,
+    union,
+    linear_extrude,
+    rotate,
+    mirror,
+    translate,
+    offset,
+)
 from solid import utils
 from .vector import V
 from . import geometry
 from . import gerber_helpers
 
 MAX_SEGMENT_LENGTH = 0.2
+
 
 def combine_faces_into_shapes(faces):
     """Takes a list of faces and combines them into continuous shapes."""
@@ -112,7 +122,6 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
         if not in_region and gerber_helpers.has_wide_aperture(
             p.aperture, length=length
         ):
-
             vertices = rect_from_line(p)
         else:
             v1 = make_v(p.start)
@@ -287,7 +296,9 @@ def offset_shape(shape: List[V], offset) -> List[V]:
     return [
         V(p[0], p[1])
         for p in utils.offset_points(
-            [v.as_tuple() for v in shape], abs(offset), internal=offset < 0  # type: ignore
+            [v.as_tuple() for v in shape],
+            abs(offset),
+            internal=offset < 0,  # type: ignore
         )
     ]
 
@@ -474,7 +485,7 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
 
 
 def process_gerber(
-        *,
+    *,
     outline_file,
     solderpaste_file,
     stencil_thickness: float,
@@ -497,7 +508,12 @@ def process_gerber(
         outline_shape = outline_shape_from_file(outline_file)
     else:
         outline_shape_rect = create_outline_shape_rect(solderpaste_file)
-        outline_shape = geometry.bounding_box(outline_shape_rect, width=stencil_width, height=stencil_height, margin=stencil_margin)
+        outline_shape = geometry.bounding_box(
+            outline_shape_rect,
+            width=stencil_width,
+            height=stencil_height,
+            margin=stencil_margin,
+        )
 
     cutout_polygon = create_cutouts(
         solderpaste_file,
@@ -515,9 +531,13 @@ def process_gerber(
 
     # Move the polygons to be centered around the origin
     outline_bounds = geometry.bounding_box(outline_shape)
-    outline_offset =  outline_bounds[0] + (outline_bounds[2] - outline_bounds[0])/2
-    outline_polygon = translate((-outline_offset[0], -outline_offset[1], 0))(outline_polygon)
-    cutout_polygon = translate((-outline_offset[0], -outline_offset[1], 0))(cutout_polygon)
+    outline_offset = outline_bounds[0] + (outline_bounds[2] - outline_bounds[0]) / 2
+    outline_polygon = translate((-outline_offset[0], -outline_offset[1], 0))(
+        outline_polygon
+    )
+    cutout_polygon = translate((-outline_offset[0], -outline_offset[1], 0))(
+        cutout_polygon
+    )
 
     if flip_stencil:
         mirror_normal = (-1, 0, 0)
@@ -529,7 +549,12 @@ def process_gerber(
 
     if include_ledge:
         ledge_shape = offset_shape(list(outline_shape), 1.2)
-        ledge_polygon = translate((-outline_offset[0], -outline_offset[1], 0))(polygon([v.as_tuple() for v in ledge_shape]))- outline_polygon
+        ledge_polygon = (
+            translate((-outline_offset[0], -outline_offset[1], 0))(
+                polygon([v.as_tuple() for v in ledge_shape])
+            )
+            - outline_polygon
+        )
 
         # Cut the ledge in half by taking the bounding box of the outline, cutting it in half
         # and removing the resulting shape from the ledge shape
@@ -545,15 +570,24 @@ def process_gerber(
             cutter[2].x -= width / 2
             cutter[3].x -= width / 2
 
-        ledge_polygon = ledge_polygon - translate((-outline_offset[0], -outline_offset[1], 0))(polygon([v.as_tuple() for v in cutter]))
+        ledge_polygon = ledge_polygon - translate(
+            (-outline_offset[0], -outline_offset[1], 0)
+        )(polygon([v.as_tuple() for v in cutter]))
 
         ledge = utils.down(ledge_thickness - stencil_thickness)(
             linear_extrude(height=ledge_thickness)(ledge_polygon)
         )
         stencil = ledge + stencil
     elif include_frame:
-        frame_shape = geometry.bounding_box(outline_shape, width=frame_width, height=frame_height)
-        frame_polygon = translate((-outline_offset[0], -outline_offset[1], 0))(polygon([v.as_tuple() for v in frame_shape])) - outline_polygon
+        frame_shape = geometry.bounding_box(
+            outline_shape, width=frame_width, height=frame_height
+        )
+        frame_polygon = (
+            translate((-outline_offset[0], -outline_offset[1], 0))(
+                polygon([v.as_tuple() for v in frame_shape])
+            )
+            - outline_polygon
+        )
 
         frame = utils.down(frame_thickness - stencil_thickness)(
             linear_extrude(height=frame_thickness)(frame_polygon)

@@ -1,10 +1,13 @@
 """Geometry helpers"""
+
 from scipy.spatial import ConvexHull
 from .vector import V
 from typing import Tuple, List
 
 
-def bounding_box(shape, width: float = 0, height: float = 0, margin: float = 0) -> Tuple[V, V, V, V]:
+def bounding_box(
+    shape, width: float = 0, height: float = 0, margin: float = 0
+) -> Tuple[V, V, V, V]:
     min_x = min(shape, key=lambda v: v[0])[0]
     max_x = max(shape, key=lambda v: v[0])[0]
     min_y = min(shape, key=lambda v: v[1])[1]
@@ -16,8 +19,12 @@ def bounding_box(shape, width: float = 0, height: float = 0, margin: float = 0) 
         else:
             margin_x = (width - (max_x - min_x)) / 2
             margin_y = (height - (max_y - min_y)) / 2
-        return (V(min_x - margin_x, min_y - margin_y), V(min_x - margin_x, max_y + margin_y),
-                V(max_x + margin_x, max_y + margin_y), V(max_x + margin_x, min_y - margin_y))
+        return (
+            V(min_x - margin_x, min_y - margin_y),
+            V(min_x - margin_x, max_y + margin_y),
+            V(max_x + margin_x, max_y + margin_y),
+            V(max_x + margin_x, min_y - margin_y),
+        )
     return (V(min_x, min_y), V(min_x, max_y), V(max_x, max_y), V(max_x, min_y))
 
 

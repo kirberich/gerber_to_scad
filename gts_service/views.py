@@ -54,7 +54,7 @@ def main(request):
                 include_ledge=form.cleaned_data["include_ledge"],
                 ledge_thickness=form.cleaned_data["ledge_thickness"],
                 gap=form.cleaned_data["gap"],
-                include_frame=form.cleaned_data['include_frame'],
+                include_frame=form.cleaned_data["include_frame"],
                 frame_width=form.cleaned_data["frame_width"],
                 frame_height=form.cleaned_data["frame_height"],
                 frame_thickness=form.cleaned_data["frame_thickness"],
