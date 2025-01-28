@@ -6,6 +6,7 @@ This repository has both a CLI tool, and a web app available at https://solder-s
 ## Installation
 
 `gerber_to_scad` requires >=python3.10.
+`gerber_to_scad` requires >=python3.10.
 
 * Make sure you have [poetry](https://python-poetry.org/docs/) installed. Easiest way: `curl -sSL https://install.python-poetry.org | python3 -`
 * Run `poetry install`.
