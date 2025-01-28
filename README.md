@@ -5,10 +5,12 @@ This repository has both a CLI tool, and a web app available at https://solder-s
 
 ## Installation
 
-`gerber_to_scad` requires python3.9.
+`gerber_to_scad` requires >=python3.10.
+`gerber_to_scad` requires >=python3.10.
 
-* Make sure you have [poetry](https://python-poetry.org/docs/) installed.
+* Make sure you have [poetry](https://python-poetry.org/docs/) installed. Easiest way: `curl -sSL https://install.python-poetry.org | python3 -`
 * Run `poetry install`.
+* or add via poetry `add git+ssh://git@github.com:kirberich/gerber_to_scad.git` to your poetry based project
 
 Note: on M1 macs, scipy doesn't install correctly out of the box. If you're getting installation errors, try this:
 
