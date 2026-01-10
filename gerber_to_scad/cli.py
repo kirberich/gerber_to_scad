@@ -33,6 +33,14 @@ def gerber_to_scad_cli():
     )
     parser.set_defaults(include_ledge=True)
     parser.add_argument(
+        "-f",
+        "--full-ledge",
+        dest="half_ledge",
+        action="store_false",
+        help="Include a full ledge around the entire board (default is half ledge).",
+    )
+    parser.set_defaults(half_ledge=True)  # Default to half ledge for backward compatibility
+    parser.add_argument(
         "-L",
         "--ledge-thickness",
         type=float,
@@ -89,6 +97,7 @@ def gerber_to_scad_cli():
                 stencil_width=0,
                 stencil_height=0,
                 stencil_margin=0,
+                half_ledge=args.half_ledge,
             )
         )
 
