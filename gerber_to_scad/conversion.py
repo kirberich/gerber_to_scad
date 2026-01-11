@@ -603,7 +603,7 @@ def process_gerber(
         frame = utils.down(frame_thickness - stencil_thickness)(
             linear_extrude(height=frame_thickness)(frame_polygon)
         )
-        stencil = frame + stencil        
+        stencil = frame + stencil
 
     # Rotate the stencil to make it printable
     stencil = rotate(a=180, v=(1, 0, 0))(stencil)
