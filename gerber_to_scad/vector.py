@@ -1,5 +1,9 @@
 # Basic vector maths class
+from __future__ import annotations
+
 import math
+
+from typing_extensions import override
 
 
 class V(object):
@@ -13,14 +17,14 @@ class V(object):
     __repr__ = __unicode__
 
     @classmethod
-    def from_tuple(cls, coordinates):
+    def from_tuple(cls, coordinates: tuple[float, float]):
         x, y = coordinates
         return V(x, y)
 
     def as_tuple(self):
         return (self.x, self.y)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int):
         if index == 0:
             return self.x
         if index == 1:
@@ -28,7 +32,7 @@ class V(object):
         raise IndexError("Vectors are two-dimensional!")
 
     @classmethod
-    def intersection(cls, o1, d1, o2, d2):
+    def intersection(cls, o1: V, d1: V, o2: V, d2: V):
         """Find intersection of two vectors, if any"""
         try:
             l2 = ((o2.x - o1.x) * d1.y / d1.x - o2.y + o1.y) / (
@@ -39,7 +43,7 @@ class V(object):
             return None
 
     @classmethod
-    def point_line_projection(cls, v1, v2, p, limit_to_segment=False):
+    def point_line_projection(cls, v1: V, v2: V, p: V, limit_to_segment: bool = False):
         """Returns the projection of the point p on the line defined
         by the two endpoints v1 and v2
         """
@@ -51,7 +55,7 @@ class V(object):
             return v1
 
         # Get the projection factor
-        a = ((p - v1) * d) / l2
+        a = ((p - v1).dot(d)) / l2
 
         # Limit the projection to be limited to stay between v1 and v2, if requested
         if limit_to_segment:
@@ -66,16 +70,14 @@ class V(object):
         """Square of absolute value of vector self"""
         return abs(self.x * self.x + self.y * self.y)
 
-    def consume_tuple(self, other):
-        if isinstance(other, tuple) or isinstance(other, list):
-            return V(other[0], other[1])
-        return other
+    def dot(self, other: V):
+        return self.x * other.x + self.y * other.y
 
-    def cross(self, other):
+    def cross(self, other: V):
         """cross product"""
         return V(self.x * other.y - other.x * self.y)
 
-    def rotate(self, theta, as_degrees=False):
+    def rotate(self, theta: float, as_degrees: bool = False):
         """Adapted from https://gist.github.com/mcleonard/5351452.
         Rotate this vector by theta in degrees.
         """
@@ -89,8 +91,9 @@ class V(object):
     def __abs__(self):
         return math.sqrt(self.abs_sq())
 
-    def __cmp__(self, other):
-        other = self.consume_tuple(other)
+    def __cmp__(self, other: object):
+        if not isinstance(other, V):
+            return False
         if self.x == other.x and self.y == other.y:
             return 0
         if abs(self) < abs(other):
@@ -105,27 +108,23 @@ class V(object):
     def __neg__(self):
         return V(-self.x, -self.y)
 
-    def __add__(self, other):
-        other = self.consume_tuple(other)
+    def __add__(self, other: V):
         return V(self.x + other.x, self.y + other.y)
 
-    def __sub__(self, other):
-        other = self.consume_tuple(other)
+    def __sub__(self, other: V):
         return V(self.x - other.x, self.y - other.y)
 
-    def __mul__(self, other):
-        other = self.consume_tuple(other)
-        if isinstance(other, V):
-            return self.x * other.x + self.y * other.y
+    def __mul__(self, other: float) -> V:
+        """Dot product"""
         return V(other * self.x, other * self.y)
 
-    def __div__(self, other):
-        if not other:
-            raise Exception("Division by zero")
-        other = float(other)
+    def __div__(self, other: float):
         return V(self.x / other, self.y / other)
 
-    def __eq__(self, other: "V") -> bool:
+    @override
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, "V"):
+            return False
         return self.x == other.x and self.y == other.y
 
     __truediv__ = __div__

@@ -1,6 +1,6 @@
 import math
 from copy import copy
-from typing import List, Tuple, cast
+from typing import Any, List, Tuple, cast
 
 from gerber import primitives
 from gerber.am_statements import (
@@ -11,6 +11,8 @@ from gerber.am_statements import (
     AMPrimitive,
     AMVectorLinePrimitive,
 )
+from gerber.gerber_statements import ApertureStmt, CoordStmt, ParamStmt, Statement
+from gerber.rs274x import ADParamStmt, AMParamStmt, GerberFile, Primitive
 from solid import (
     OpenSCADObject,
     linear_extrude,
@@ -23,6 +25,7 @@ from solid import (
     union,
     utils,
 )
+from typing_extensions import TypedDict
 
 from . import geometry, gerber_helpers
 from .vector import V
@@ -30,9 +33,9 @@ from .vector import V
 MAX_SEGMENT_LENGTH = 0.2
 
 
-def combine_faces_into_shapes(faces):
+def combine_faces_into_shapes(faces: list[list[V]]):
     """Takes a list of faces and combines them into continuous shapes."""
-    shapes = []
+    shapes: list[list[V]] = []
 
     for face in faces:
         if len(face) != 2:
@@ -62,7 +65,7 @@ def combine_faces_into_shapes(faces):
     return shapes
 
 
-def make_v(v: Tuple[float, float], decimal_places=3) -> V:
+def make_v(v: Tuple[float, float], decimal_places: int = 3) -> V:
     """Round vertex coordinates to some amount of decimal places."""
     return V(round(v[0], decimal_places), round(v[1], decimal_places))
 
@@ -91,7 +94,7 @@ def rect_from_line(line: primitives.Line):
     v_len = math.sqrt(2) * r
 
     # Give the direction vector the appropriate length
-    dir_v = cast(V, dir_v * v_len)
+    dir_v = dir_v * v_len
 
     v1 = start_v + dir_v.rotate(135, as_degrees=True)
     v2 = start_v + dir_v.rotate(-135, as_degrees=True)
@@ -101,7 +104,9 @@ def rect_from_line(line: primitives.Line):
     return [v1, v2, v3, v4]
 
 
-def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
+def primitive_to_shape(
+    p: Primitive | AMPrimitive, in_region: bool = False, simplify_regions: bool = False
+) -> List[V]:
     """Turns a gerber primitive into an scad shape.
 
     If in_region is True, all shapes are assumed to be contours only, ignoring apertures.
@@ -129,14 +134,15 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
             vertices = [v1, v2]
     elif isinstance(p, (primitives.Circle, AMCirclePrimitive)):
         # Rasterize circle, aiming for a hopefully reasonable segment length of 0.1mm
+        assert isinstance(p.diameter, float)
         circ = math.pi * p.diameter
         num_segments = max(1, int(round(circ / MAX_SEGMENT_LENGTH)))
 
         # Generate vertexes for each segment around the circle
         for s in range(0, num_segments):
             angle = s * (2 * math.pi / num_segments)
-            x = p.position[0] + math.cos(angle) * p.diameter / 2
-            y = p.position[1] + math.sin(angle) * p.diameter / 2
+            x = cast(float, p.position[0]) + math.cos(angle) * p.diameter / 2
+            y = cast(float, p.position[1]) + math.sin(angle) * p.diameter / 2
             vertices.append(make_v((x, y)))
     elif isinstance(p, primitives.Rectangle):
         v1 = make_v(p.lower_left)  # lower left
@@ -146,8 +152,11 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
         vertices = [v1, v2, v3, v4]
     elif isinstance(p, AMCenterLinePrimitive):
         # Essentially a rotated rectangle
+        assert isinstance(p.rotation, float)
+        assert isinstance(p.width, float)
+        assert isinstance(p.height, float)
         print(f"Center line {p.rotation} deg")
-        center = p.center
+        center = cast(tuple[float, float], p.center)
         angle_rad = p.rotation * math.pi / 180
         cos_angle = math.cos(angle_rad)
         sin_angle = math.sin(angle_rad)
@@ -178,7 +187,7 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
             ),
         ]
     elif isinstance(p, primitives.Region):
-        for sub_primitive in p.primitives:
+        for sub_primitive in cast(list[Primitive | AMPrimitive], p.primitives):
             vertices += [
                 vertex
                 for vertex in primitive_to_shape(sub_primitive, in_region=True)
@@ -210,8 +219,8 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
         angle = p.start_angle
 
         for s in range(0, num_segments):
-            x = p.center[0] + math.cos(angle) * p.radius
-            y = p.center[1] + math.sin(angle) * p.radius
+            x = cast(float, p.center[0]) + math.cos(angle) * p.radius
+            y = cast(float, p.center[1]) + math.sin(angle) * p.radius
             vertices.append(make_v((x, y)))
 
             angle = (
@@ -221,7 +230,7 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
             )
 
     elif isinstance(p, AMOutlinePrimitive):
-        return [make_v(point) for point in p.points]
+        return [make_v(point) for point in cast(list[tuple[float, float]], p.points)]
     elif isinstance(p, AMVectorLinePrimitive):
         # A vector line with a given thickness - we turn this into a rotated rectangle
         start_v = V.from_tuple(p.start)
@@ -252,7 +261,7 @@ def primitive_to_shape(p, in_region=False, simplify_regions=False) -> List[V]:
     return vertices
 
 
-def create_outline_shape_rect(outline) -> List[V]:
+def create_outline_shape_rect(outline: GerberFile) -> List[V]:
     outline.to_metric()
     outline_vertices: List[V] = []
 
@@ -275,13 +284,13 @@ def create_outline_shape_rect(outline) -> List[V]:
     return geometry.convex_hull(outline_vertices)
 
 
-def outline_shape_from_file(outline) -> List[V]:
+def outline_shape_from_file(outline: GerberFile) -> list[V]:
     outline.to_metric()
     outline_vertices: List[V] = []
 
     if outline.primitives:
-        for p in outline.primitives:
-            if type(p) == primitives.AMGroup:
+        for p in cast(list[Primitive | AMPrimitive], outline.primitives):
+            if isinstance(p, primitives.AMGroup):
                 print(f"Ignoring AMGroup {p}")
                 continue
             outline_vertices += primitive_to_shape(p)
@@ -290,7 +299,13 @@ def outline_shape_from_file(outline) -> List[V]:
         return create_outline_shape_rect(outline)
 
 
-def find_line_closest_to_point(point, lines):
+class ClosestLineInfo(TypedDict):
+    closest_line_index: int | None
+    close_vertex: V | None
+    far_vertex: V | None
+
+
+def find_line_closest_to_point(point: V, lines: list[list[V]]) -> ClosestLineInfo:
     """Finds the line from a list of lines that is closest to `point`.
     Returns a bunch of information about the closest line.
     """
@@ -336,6 +351,7 @@ def lines_to_shapes(lines: List[List[V]]) -> List[List[V]]:
         # Try to find a point close to the start of the shape
         start_point_info = find_line_closest_to_point(shape[0], lines)
         if start_point_info["closest_line_index"] is not None:
+            assert start_point_info["far_vertex"] is not None
             shape.insert(0, start_point_info["far_vertex"])
             del lines[start_point_info["closest_line_index"]]
             continue
@@ -343,6 +359,7 @@ def lines_to_shapes(lines: List[List[V]]) -> List[List[V]]:
         # If no point close to the start was found, try to find a point close to the end of the shape
         end_point_info = find_line_closest_to_point(shape[-1], lines)
         if end_point_info["closest_line_index"] is not None:
+            assert end_point_info["far_vertex"] is not None
             shape.append(end_point_info["far_vertex"])
             del lines[end_point_info["closest_line_index"]]
             continue
@@ -361,7 +378,11 @@ def lines_to_shapes(lines: List[List[V]]) -> List[List[V]]:
     return shapes
 
 
-def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=False):
+def create_cutouts(
+    solder_paste: GerberFile,
+    increase_hole_size_by: float = 0.0,
+    simplify_regions: bool = False,
+):
     solder_paste.to_metric()
 
     cutout_shapes: List[List[V]] = []
@@ -373,41 +394,40 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
     current_aperture = None
     current_x = 0
     current_y = 0
-    for statement in solder_paste.statements:
-        print(statement)
-        if statement.type == "PARAM":
-            if statement.param == "AD":
+    for statement in cast(list[Statement], solder_paste.statements):
+        if isinstance(statement, ParamStmt):
+            if isinstance(statement, ADParamStmt):
                 # define aperture
                 apertures[statement.d] = {
                     "shape": statement.shape,
                     "modifiers": statement.modifiers,
                 }
-            elif statement.param == "AM":
+            elif isinstance(statement, AMParamStmt):
                 # Aperture macro
                 aperture_macros[statement.name] = []
-                for primitive in statement.primitives:
+                for primitive in cast(list[AMPrimitive], statement.primitives):
                     aperture_macros[statement.name].append(
                         primitive_to_shape(primitive)
                     )
 
-        elif statement.type == "APERTURE":
+        elif isinstance(statement, ApertureStmt):
             current_aperture = statement.d
-        elif statement.type == "COORD" and statement.op in ["D02", "D2"]:
+        elif isinstance(statement, CoordStmt) and statement.op in ["D02", "D2"]:
             # Move coordinates
             if statement.x is not None:
-                current_x = statement.x
+                current_x = float(statement.x)
             if statement.y is not None:
-                current_y = statement.y
-        elif statement.type == "COORD" and statement.op in [
+                current_y = float(statement.y)
+        elif isinstance(statement, CoordStmt) and statement.op in [
             "D03",
             "D3",
         ]:  # flash object coordinates
             if not current_aperture:
                 raise Exception("No aperture set on flash object coordinates!")
 
-            aperture = apertures[current_aperture]
-            current_x = statement.x if statement.x is not None else current_x
-            current_y = statement.y if statement.y is not None else current_y
+            aperture = cast(dict[Any, Any], apertures[current_aperture])
+            current_x = float(statement.x) if statement.x is not None else current_x
+            current_y = float(statement.y) if statement.y is not None else current_y
             if aperture["shape"] == "C":  # circle
                 cutout_shapes.append(
                     primitive_to_shape(
@@ -418,7 +438,7 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
                     )
                 )
             elif aperture["shape"] == "R":  # rectangle
-                width, height = aperture["modifiers"][0]
+                width, height = cast(tuple[float, float], aperture["modifiers"][0])
                 print(f"Rect X: {current_x} Y: {current_y}")
                 cutout_shapes.append(
                     primitive_to_shape(
@@ -430,7 +450,7 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
                     )
                 )
             elif aperture["shape"] == "O":  # obround
-                width, height = aperture["modifiers"][0]
+                width, height = cast(tuple[float, float], aperture["modifiers"][0])
                 print(f"Obround at {current_x},{current_y}")
                 obround = primitives.Obround((0, 0), width, height)
                 shape = primitive_to_shape(obround)
@@ -439,7 +459,9 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
                 ]
                 cutout_shapes.append(positioned_shape)
             elif aperture["shape"] in aperture_macros:  # Aperture macro shape
-                for macro_shape in aperture_macros[aperture["shape"]]:
+                for macro_shape in cast(
+                    list[dict[Any, Any]], aperture_macros[aperture["shape"]]
+                ):
                     # Offset all points in the macro and add the resulting shape
                     shape = [V(p[0] + current_x, p[1] + current_y) for p in macro_shape]
                     cutout_shapes.append(shape)
@@ -450,8 +472,8 @@ def create_cutouts(solder_paste, increase_hole_size_by=0.0, simplify_regions=Fal
         else:
             pass
 
-    for p in solder_paste.primitives:
-        if type(p) == primitives.AMGroup:
+    for p in cast(list[Primitive | AMPrimitive], solder_paste.primitives):
+        if isinstance(p, primitives.AMGroup):
             print(f"Ignoring AMGroup {p}")
             continue
         shape = primitive_to_shape(p, simplify_regions=simplify_regions)
@@ -515,8 +537,8 @@ def create_ledge(outline_shape: geometry.Shape, full_ledge: bool) -> OpenSCADObj
 
 def process_gerber(
     *,
-    outline_file,
-    solderpaste_file,
+    outline_file: GerberFile,
+    solderpaste_file: GerberFile,
     stencil_thickness: float,
     include_ledge: bool,
     ledge_thickness: float,

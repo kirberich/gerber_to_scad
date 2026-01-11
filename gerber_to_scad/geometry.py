@@ -54,7 +54,7 @@ def convex_hull(points: list[V]) -> list[V]:
     return [V(float(x), float(y)) for x, y in hull_points]
 
 
-def offset_shape(shape: Sequence[V], offset) -> list[V]:
+def offset_shape(shape: Sequence[V], offset: float) -> list[V]:
     """Offset a shape by <offset> mm."""
 
     return [

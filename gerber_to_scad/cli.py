@@ -3,6 +3,7 @@
 import argparse
 
 import gerber
+from gerber.rs274x import GerberFile
 
 from .conversion import process_gerber
 
@@ -76,7 +77,9 @@ def gerber_to_scad_cli():
     solderpaste_file = open(args.solderpaste_file, "r")
 
     outline = gerber.loads(outline_file.read())
+    assert isinstance(outline, GerberFile)
     solder_paste = gerber.loads(solderpaste_file.read())
+    assert isinstance(solder_paste, GerberFile)
     with open(args.output_file, "w") as output_file:
         output_file.write(
             process_gerber(
