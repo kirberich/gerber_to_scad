@@ -548,15 +548,14 @@ def process_gerber(
 
     stencil = linear_extrude(height=stencil_thickness)(outline_polygon - cutout_polygon)
 
-    
     if include_ledge:
         # Create the original untranslated outline polygon
         original_outline_polygon = polygon([v.as_tuple() for v in outline_shape])
-    
+        
         # Create ledge by offsetting and subtracting
         from solid import offset as solid_offset
         ledge_polygon = solid_offset(delta=1.2)(original_outline_polygon) - original_outline_polygon
-    
+        
         # If we want half ledge (default), cut it in half
         if half_ledge:
             # Cut the ledge in half by taking the bounding box of the outline, cutting it in half
@@ -566,45 +565,29 @@ def process_gerber(
             cutter = geometry.bounding_box(ledge_shape)
             height = abs(cutter[1][1] - cutter[0][1])
             width = abs(cutter[0][0] - cutter[3][0])
-
+            
             if width > height:
                 cutter[1].y -= height / 2
                 cutter[2].y -= height / 2
             else:
                 cutter[2].x -= width / 2
                 cutter[3].x -= width / 2
-
+            
             # Apply the cutter to make half ledge
             half_ledge_polygon = polygon([v.as_tuple() for v in ledge_shape])
             half_ledge_polygon = half_ledge_polygon - polygon([v.as_tuple() for v in cutter])
-        
+            
             # Use the half ledge polygon instead
             ledge_polygon = translate((-outline_offset[0], -outline_offset[1], 0))(half_ledge_polygon) - outline_polygon
-    
+        
         # Translate the ledge polygon to center (if not already done for half ledge)
         if not half_ledge:
             ledge_polygon = translate((-outline_offset[0], -outline_offset[1], 0))(ledge_polygon)
-    
+        
         ledge = utils.down(ledge_thickness - stencil_thickness)(
             linear_extrude(height=ledge_thickness)(ledge_polygon)
         )
-        stencil = ledge + stencil
-    
-    elif include_frame:
-        frame_shape = geometry.bounding_box(
-            outline_shape, width=frame_width, height=frame_height
-        )
-        frame_polygon = (
-            translate((-outline_offset[0], -outline_offset[1], 0))(
-                polygon([v.as_tuple() for v in frame_shape])
-            )
-            - outline_polygon
-        )
-
-        frame = utils.down(frame_thickness - stencil_thickness)(
-            linear_extrude(height=frame_thickness)(frame_polygon)
-        )
-        stencil = frame + stencil
+        stencil = ledge + stencil        
 
     # Rotate the stencil to make it printable
     stencil = rotate(a=180, v=(1, 0, 0))(stencil)
