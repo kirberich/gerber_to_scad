@@ -590,20 +590,20 @@ def process_gerber(
         stencil = ledge + stencil
 
     elif include_frame:
-            frame_shape = geometry.bounding_box(
-                outline_shape, width=frame_width, height=frame_height
+        frame_shape = geometry.bounding_box(
+            outline_shape, width=frame_width, height=frame_height
+        )
+        frame_polygon = (
+            translate((-outline_offset[0], -outline_offset[1], 0))(
+                polygon([v.as_tuple() for v in frame_shape])
             )
-            frame_polygon = (
-                translate((-outline_offset[0], -outline_offset[1], 0))(
-                    polygon([v.as_tuple() for v in frame_shape])
-                )
-                - outline_polygon
-            )
+            - outline_polygon
+        )
 
-            frame = utils.down(frame_thickness - stencil_thickness)(
-                linear_extrude(height=frame_thickness)(frame_polygon)
-            )
-            stencil = frame + stencil        
+        frame = utils.down(frame_thickness - stencil_thickness)(
+            linear_extrude(height=frame_thickness)(frame_polygon)
+        )
+        stencil = frame + stencil        
 
     # Rotate the stencil to make it printable
     stencil = rotate(a=180, v=(1, 0, 0))(stencil)
