@@ -1,13 +1,24 @@
-"""Geometry helpers"""
+"""Geometry helpers for gerber_to_scad _shapes_, as opposed to OpenSCAD objects.
+
+Once a shape is turned into an openscad object, we cannot introspect the object anymore, so any operations that require
+concrete numbers for size, convex hull etc, have to happen on shapes before turning them into openscad objects.
+
+"""
+
+from collections.abc import Sequence
 
 from scipy.spatial import ConvexHull
+from solid import utils
+
 from .vector import V
-from typing import Tuple, List
+
+Rect = tuple[V, V, V, V]
+Shape = Sequence[V]
 
 
 def bounding_box(
-    shape, width: float = 0, height: float = 0, margin: float = 0
-) -> Tuple[V, V, V, V]:
+    shape: Sequence[V], width: float = 0, height: float = 0, margin: float = 0
+) -> Rect:
     min_x = min(shape, key=lambda v: v[0])[0]
     max_x = max(shape, key=lambda v: v[0])[0]
     min_y = min(shape, key=lambda v: v[1])[1]
@@ -28,7 +39,7 @@ def bounding_box(
     return (V(min_x, min_y), V(min_x, max_y), V(max_x, max_y), V(max_x, min_y))
 
 
-def convex_hull(points: List[V]) -> List[V]:
+def convex_hull(points: list[V]) -> list[V]:
     hull = ConvexHull([v.as_tuple() for v in points])
 
     # import matplotlib.pyplot as plt
@@ -41,3 +52,16 @@ def convex_hull(points: List[V]) -> List[V]:
     hull_points = [hull.points[vertex_index] for vertex_index in hull.vertices]
 
     return [V(float(x), float(y)) for x, y in hull_points]
+
+
+def offset_shape(shape: Sequence[V], offset) -> list[V]:
+    """Offset a shape by <offset> mm."""
+
+    return [
+        V(p[0], p[1])
+        for p in utils.offset_points(
+            [p.as_tuple() for p in shape],  # type: ignore
+            abs(offset),
+            internal=offset < 0,  # type: ignore
+        )
+    ]

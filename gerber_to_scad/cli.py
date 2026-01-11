@@ -1,6 +1,7 @@
 """CLI entry point for gerber_to_scad."""
 
 import argparse
+
 import gerber
 
 from .conversion import process_gerber
@@ -32,6 +33,12 @@ def gerber_to_scad_cli():
         "aligning the stencil easily. Pass this to exclude this ledge.",
     )
     parser.set_defaults(include_ledge=True)
+    parser.add_argument(
+        "-f",
+        "--full-ledge",
+        action="store_true",
+        help="Include a full ledge around the entire board (default is half ledge).",
+    )
     parser.add_argument(
         "-L",
         "--ledge-thickness",
@@ -78,6 +85,7 @@ def gerber_to_scad_cli():
                 stencil_thickness=args.thickness,
                 include_ledge=args.include_ledge,
                 ledge_thickness=args.ledge_thickness,
+                full_ledge=args.full_ledge,
                 gap=args.gap,
                 increase_hole_size_by=args.increase_hole_size,
                 flip_stencil=args.flip,
