@@ -47,7 +47,7 @@ optional arguments:
   -n, --no-ledge        By default, a ledge around half the outline of the
                         board is included, to allow aligning the stencil
                         easily. Pass this to exclude this ledge.
-  -f                    By default, a ledge around half the outline of the
+  -f, --full-ledge      By default, a ledge around half the outline of the
                         board is included. Pass this to make the ledge around
                         the full perimeter instead of half.
   -L LEDGE_THICKNESS, --ledge-thickness LEDGE_THICKNESS
