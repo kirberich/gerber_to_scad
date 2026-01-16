@@ -1,7 +1,7 @@
 # gerber_to_scad
 Simple python script for converting gerber files into a 3d printable solder stencil scad file
 
-This repository has both a CLI tool, and a web app available at https://solder-stencil.me.
+This repository has both a CLI tool, and a web app you can run locally or self-host. The tool used to run online at solder-stencil.me, but this is currently offline. If anyone misses it, let me know and I might bring it back!
 
 ## Installation
 
