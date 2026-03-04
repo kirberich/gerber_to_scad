@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
+from typing import cast
+
 import environ
 
 env = environ.Env()
@@ -28,7 +30,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = "-7lxck0^d7y#5$fq3ubvtm1*_g%nzd-=ich_1x)^f)8j)hgps+"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool("DEBUG")
+DEBUG = cast(bool, env.bool("DEBUG"))
 
 ALLOWED_HOSTS = ["*"]
 
@@ -58,7 +60,7 @@ MIDDLEWARE_CLASSES = [
 
 ROOT_URLCONF = "gts_service.urls"
 
-TEMPLATES = [
+TEMPLATES = [  # pyright: ignore[reportUnknownVariableType]
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [],
@@ -111,4 +113,4 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
-OPENSCAD_BIN = env.str("SCAD_BINARY")
+OPENSCAD_BIN = cast(str, env.str("SCAD_BINARY"))

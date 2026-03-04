@@ -1,17 +1,15 @@
-import os
-from random import randint
-import subprocess
+import logging
 
-from django.conf import settings
+from django.core.files.uploadedfile import UploadedFile
+from django.forms import Form
+from django.forms.utils import ErrorList
+from django.http import HttpRequest
 from django.http.response import HttpResponse
 from django.shortcuts import render
+from pygerber.gerberx3.api.v2 import GerberFile
 
-import gerber
-from gerber_to_scad import (
-    process_gerber,
-)
-from gts_service.forms import UploadForm
-import logging
+from gts_service.forms import ConvertGerberForm
+from gts_service.process import ConversionError, create_stl
 
 
 def _get_version():
@@ -19,87 +17,55 @@ def _get_version():
         return f.read()
 
 
-def main(request):
-    form = UploadForm(request.POST or None, files=request.FILES or None)
+def _validate_gerber_file(raw_file: UploadedFile | list[object], form: Form):
+    if isinstance(raw_file, list):
+        raise RuntimeError(f"Expected single uploaded gerber file, got {raw_file}")
+
+    try:
+        return GerberFile.from_str(raw_file.read().decode("utf-8")).parse()
+    except Exception as e:
+        logging.error(e)
+        form.errors["outline_file"] = ErrorList(
+            ["Invalid format, is this a valid gerber file?"]
+        )
+
+
+def main(request: HttpRequest):
+    form = ConvertGerberForm(request.POST or None, files=request.FILES or None)
     version = _get_version()
-    if form.is_valid():
-        outline_file = form.cleaned_data["outline_file"]
-        solderpaste_file = request.FILES["solderpaste_file"]
-        outline = None
+    stl_data = None
 
-        if outline_file:
-            try:
-                outline = gerber.loads(outline_file.read().decode("utf-8"))
-            except Exception as e:
-                logging.error(e)
-                outline = None
-                form.errors["outline_file"] = [
-                    "Invalid format, is this a valid gerber file?"
-                ]
+    if not form.is_valid():
+        return render(request, "main.html", {"form": form, "version": version})
 
-        try:
-            solder_paste = gerber.loads(solderpaste_file.read().decode("utf-8"))
-        except Exception as e:
-            logging.error(e)
-            solder_paste = None
-            form.errors["solderpaste_file"] = [
-                "Invalid format, is this a valid gerber file?"
-            ]
+    outline = _validate_gerber_file(request.FILES["outline_file"], form)
+    solder_paste = _validate_gerber_file(request.FILES["solderpaste_file"], form)
 
-        if not form.errors:
-            output = process_gerber(
-                outline_file=outline,
-                solderpaste_file=solder_paste,
-                stencil_thickness=form.cleaned_data["stencil_thickness"],
-                include_ledge=form.cleaned_data["include_ledge"],
-                ledge_thickness=form.cleaned_data["ledge_thickness"],
-                gap=form.cleaned_data["gap"],
-                include_frame=form.cleaned_data["include_frame"],
-                frame_width=form.cleaned_data["frame_width"],
-                frame_height=form.cleaned_data["frame_height"],
-                frame_thickness=form.cleaned_data["frame_thickness"],
-                increase_hole_size_by=form.cleaned_data["increase_hole_size_by"],
-                simplify_regions=form.cleaned_data["simplify_regions"],
-                flip_stencil=form.cleaned_data["flip_stencil"],
-                stencil_width=form.cleaned_data["stencil_width"],
-                stencil_height=form.cleaned_data["stencil_height"],
-                stencil_margin=form.cleaned_data["stencil_margin"],
-            )
+    if outline is None or solder_paste is None:
+        return render(request, "main.html", {"form": form, "version": version})
 
-            file_id = randint(1000000000, 9999999999)
-            scad_filename = "/tmp/gts-{}.scad".format(file_id)
-            stl_filename = "/tmp/gts-{}.stl".format(file_id)
-
-            with open(scad_filename, "w") as scad_file:
-                scad_file.write(output)
-
-            p = subprocess.Popen(
-                [
-                    settings.OPENSCAD_BIN,
-                    "-o",
-                    stl_filename,
-                    scad_filename,
-                ]
-            )
-            p.wait()
-
-            if p.returncode:
-                form.errors["__all__"] = ["Failed to create an STL file from inputs"]
-            else:
-                with open(stl_filename, "r") as stl_file:
-                    stl_data = stl_file.read()
-                os.remove(stl_filename)
-
-            # Clean up temporary files
-            os.remove(scad_filename)
-
-        if form.errors:
-            return render(request, "main.html", {"form": form, "version": version})
+    try:
+        stl_data, stl_filename = create_stl(
+            outline=outline,
+            solder_paste=solder_paste,
+            stencil_thickness=form.cleaned_data["stencil_thickness"],
+            include_ledge=form.cleaned_data["include_ledge"],
+            full_ledge=form.cleaned_data["full_ledge"],
+            ledge_thickness=form.cleaned_data["ledge_thickness"],
+            gap=form.cleaned_data["gap"],
+            increase_hole_size_by=form.cleaned_data["increase_hole_size_by"],
+            flip_stencil=form.cleaned_data["flip_stencil"],
+            include_frame=form.cleaned_data["include_frame"],
+            frame_width=form.cleaned_data["frame_width"],
+            frame_height=form.cleaned_data["frame_height"],
+            frame_thickness=form.cleaned_data["frame_thickness"],
+        )
 
         response = HttpResponse(stl_data, content_type="application/zip")
         response["Content-Disposition"] = (
-            "attachment; filename=%s" % stl_filename.rsplit("/")[-1]
+            f"attachment; filename={stl_filename.rsplit('/')[-1]}"
         )
         return response
-
-    return render(request, "main.html", {"form": form, "version": version})
+    except ConversionError as e:
+        form.errors["__all__"] = ErrorList([str(e)])
+        return render(request, "main.html", {"form": form, "version": version})
