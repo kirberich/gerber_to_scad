@@ -15,9 +15,6 @@ scipy = "^1.10.1"
 typing-extensions = "^4.15.0"
 pygerber = {extras = ["svg"], version = "^2.4.3"}
 
-[tool.poetry.dev-dependencies]
-black = "^23.3.0"
-
 [tool.poetry.scripts]
 gerber_to_scad = "gerber_to_scad.cli:gerber_to_scad_cli"
 
