@@ -5,7 +5,7 @@ This repository has both a CLI tool, and a web app you can run locally or self-h
 
 ## Installation
 
-`gerber_to_scad` requires python3.9.
+`gerber_to_scad` requires python3.10.
 
 * Make sure you have [poetry](https://python-poetry.org/docs/) installed.
 * Run `poetry install`.
