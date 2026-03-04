@@ -1,6 +1,6 @@
 [tool.poetry]
-authors = ["Your Name <you@example.com>"]
-description = ""
+authors = ["Rob Kirberich <rob@kirberich.uk>"]
+description = "Solder stencil generator, converts gerber files to a 3d-printable openSCAD solder stencil"
 name = "gerber_to_scad"
 version = "0.1.3"
 
