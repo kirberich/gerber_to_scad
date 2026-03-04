@@ -2,10 +2,9 @@
 
 import argparse
 
-import gerber
-from gerber.rs274x import GerberFile
+from pygerber.gerberx3.api.v2 import GerberFile
 
-from .conversion import process_gerber
+from .conversion import GerberConverter
 
 
 def gerber_to_scad_cli():
@@ -73,35 +72,23 @@ def gerber_to_scad_cli():
 
     args = parser.parse_args()
 
-    outline_file = open(args.outline_file, "r")
-    solderpaste_file = open(args.solderpaste_file, "r")
+    outline_parsed = GerberFile.from_file(args.outline_file).parse()
+    paste_parsed = GerberFile.from_file(args.solderpaste_file).parse()
 
-    outline = gerber.loads(outline_file.read())
-    assert isinstance(outline, GerberFile)
-    solder_paste = gerber.loads(solderpaste_file.read())
-    assert isinstance(solder_paste, GerberFile)
+    converter = GerberConverter(
+        outline_file=outline_parsed,
+        solderpaste_file=paste_parsed,
+        stencil_thickness=args.thickness,
+        include_ledge=args.include_ledge,
+        ledge_thickness=args.ledge_thickness,
+        full_ledge=args.full_ledge,
+        gap=args.gap,
+        increase_hole_size_by=args.increase_hole_size,
+        flip_stencil=args.flip,
+    )
+
     with open(args.output_file, "w") as output_file:
-        output_file.write(
-            process_gerber(
-                outline_file=outline,
-                solderpaste_file=solder_paste,
-                stencil_thickness=args.thickness,
-                include_ledge=args.include_ledge,
-                ledge_thickness=args.ledge_thickness,
-                full_ledge=args.full_ledge,
-                gap=args.gap,
-                increase_hole_size_by=args.increase_hole_size,
-                flip_stencil=args.flip,
-                include_frame=False,
-                frame_width=0,
-                frame_height=0,
-                frame_thickness=1.2,
-                simplify_regions=False,
-                stencil_width=0,
-                stencil_height=0,
-                stencil_margin=0,
-            )
-        )
+        output_file.write(converter.convert())
 
 
 if __name__ == "__main__":
