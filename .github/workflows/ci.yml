@@ -57,10 +57,19 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Check if version already published
+        id: check
+        run: |
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['tool']['poetry']['version'])")
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://test.pypi.org/pypi/gerber-to-scad/$VERSION/json)
+          [ "$STATUS" = "200" ] && echo "should_publish=false" >> $GITHUB_OUTPUT || echo "should_publish=true" >> $GITHUB_OUTPUT
+
       - name: Build package
+        if: steps.check.outputs.should_publish == 'true'
         run: pip install build && python -m build
 
       - name: Publish to TestPyPI
+        if: steps.check.outputs.should_publish == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
@@ -79,8 +88,17 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Check if version already published
+        id: check
+        run: |
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['tool']['poetry']['version'])")
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://pypi.org/pypi/gerber-to-scad/$VERSION/json)
+          [ "$STATUS" = "200" ] && echo "should_publish=false" >> $GITHUB_OUTPUT || echo "should_publish=true" >> $GITHUB_OUTPUT
+
       - name: Build package
+        if: steps.check.outputs.should_publish == 'true'
         run: pip install build && python -m build
 
       - name: Publish to PyPI
+        if: steps.check.outputs.should_publish == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
