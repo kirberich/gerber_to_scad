@@ -1,4 +1,4 @@
-name: Lint
+name: CI
 
 on:
   push:
@@ -25,3 +25,18 @@ jobs:
 
       - name: Run basedpyright
         run: poetry run basedpyright
+
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install package
+        run: pip install .
+
+      - name: Run CLI help
+        run: gerber_to_scad -h
