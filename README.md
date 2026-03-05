@@ -74,7 +74,7 @@ For basic usage, simply run the script with input files for the gerber outline a
 gerber_to_scad outline_file.gko toppaste_file.gtp output.scad
 ```
 
-Specifying a .stl file as the output file will directly call OpenSCAD to create the STL - if OpenSCAD is not on the path, you can use --openscad-binary=<path> to specify it
+Specifying a .stl file as the output file will directly call OpenSCAD to create the STL - if OpenSCAD is not on the path, you can use `--openscad-binary=<path>` to specify it
 
 ## Contributing
 
