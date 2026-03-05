@@ -41,7 +41,7 @@ jobs:
         run: pip install .
 
       - name: Run CLI help
-        run: gerber_to_scad -h
+        run: gerber_to_scad --help
 
   test:
     runs-on: ubuntu-latest
@@ -61,8 +61,11 @@ jobs:
       - name: Install package
         run: pip install .
 
-      - name: Generate STL file
-        run: xvfb-run gerber_to_scad tests/test_board-outline.gko tests/test_board-toppaste.gtp output.stl
+      - name: Generate STL from two files
+        run: xvfb-run gerber_to_scad files tests/test_board-outline.gko tests/test_board-toppaste.gtp output.stl
+
+      - name: Generate STL from zip
+        run: xvfb-run gerber_to_scad zip tests/test_board.zip output_zip.stl --side top
 
   release-testpypi:
     runs-on: ubuntu-latest

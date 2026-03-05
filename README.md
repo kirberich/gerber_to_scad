@@ -30,48 +30,42 @@ poetry install
 You'll get some information on available options if you run it with the -h argument:
 
 ```bash
-(env) $ gerber_to_scad -h
-# Or:
-(env) $ python -m gerber_to_scad -h
-usage: main.py [-h] [-t THICKNESS] [-n] [-L LEDGE_THICKNESS] [-g GAP]
-                         [-i INCREASE_HOLE_SIZE]
-                         outline_file solderpaste_file output_file
+(env) $ gerber_to_scad from-files --help
 
-Convert gerber files to an scad 3d printable solder stencil.
+Usage: gerber_to_scad from-files [OPTIONS]
 
-positional arguments:
-  outline_file          Outline file
-  solderpaste_file      Solderpaste file
-  output_file           Output file
+  Generate a stencil from an outline and paste gerber file.
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -t THICKNESS, --thickness THICKNESS
-                        Thickness (in mm) of the stencil. Make sure this is a
-                        multiple of the layer height you use for printing
-                        (default: 0.2)
-  -n, --no-ledge        By default, a ledge around half the outline of the
-                        board is included, to allow aligning the stencil
-                        easily. Pass this to exclude this ledge.
-  -f, --full-ledge      By default, a ledge around half the outline of the
-                        board is included. Pass this to make the ledge around
-                        the full perimeter instead of half.
-  -L LEDGE_THICKNESS, --ledge-thickness LEDGE_THICKNESS
-                        Thickness of the stencil ledge. This should be less than
-                        the thickness of the PCB (default: 1.2)
-  -g GAP, --gap GAP     Gap (in mm) between board and stencil ledge. Increase
-                        this if the fit of the stencil is too tight (default:
-                        0.0)
-  -i INCREASE_HOLE_SIZE, --increase-hole-size INCREASE_HOLE_SIZE
-                        Increase the size of all holes in the stencil by this
-                        amount (in mm). Use this if you find holes get printed
-                        smaller than they should (default: 0.0)
+Options:
+  --outline FILE                  File containing the outline layer
+                                  [required]
+  --paste FILE                    File containing the solderpaste layer (top
+                                  or bottom)  [required]
+  --output FILE                   Output file  [required]
+  -t, --thickness FLOAT           Stencil thickness in mm. Should be a
+                                  multiple of your layer height.  [default:
+                                  0.2]
+  -n, --no-ledge                  Exclude the alignment ledge around the board
+                                  outline.
+  -f, --full-ledge                Include a full ledge (default is half
+                                  ledge).
+  -L, --ledge-thickness FLOAT     Ledge thickness in mm. Should be less than
+                                  the PCB thickness.  [default: 1.2]
+  -g, --gap FLOAT                 Gap in mm between board and ledge. Increase
+                                  if fit is too tight.  [default: 0.0]
+  -i, --increase-hole-size FLOAT  Increase all hole sizes by this amount in
+                                  mm.  [default: 0.0]
+  --flip                          Flip the stencil (use for bottom layer
+                                  stencils).
+  --openscad-binary PATH          Path to the OpenSCAD binary. Only used when
+                                  output ends in .stl.  [default: openscad]
+  --help                          Show this message and exit.
 ```
 
 For basic usage, simply run the script with input files for the gerber outline and solderpaste files and specify an output:
 
 ```bash
-gerber_to_scad outline_file.gko toppaste_file.gtp output.scad
+gerber_to_scad from-files --outline=outline_file.gko --paste=toppaste_file.gtp --output=output.scad
 ```
 
 Specifying a .stl file as the output file will directly call OpenSCAD to create the STL - if OpenSCAD is not on the path, you can use `--openscad-binary=<path>` to specify it

@@ -1016,4 +1016,4 @@ service = ["Django", "django-bootstrap3", "django-environ", "gunicorn"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4"
-content-hash = "0715fc8c4ac776903edd629f3c11f61c97effa5019c59e3e8ad966e3ad670dde"
+content-hash = "e2eaae27daa7fe844f71e5c5ceba899aeb6ef6ab031c8b78179f54fe438c74c8"
