@@ -5,17 +5,31 @@ name = "gerber_to_scad"
 version = "0.1.3"
 
 [tool.poetry.dependencies]
-Django = "^4.2"
-django-bootstrap3 = "^23.1"
-django-environ = "^0.10.0"
-gunicorn = "^25.1.0"
 pcb-tools = "^0.1.6"
-python = "^3.10,<3.11"
+python = ">=3.10"
 scipy = "^1.10.1"
 typing-extensions = "^4.15.0"
 pygerber = {extras = ["svg"], version = "^2.4.3"}
-setuptools = ">=67.0.0,<81.0.0"
 solidpython = "^1.1.3"
+
+[tool.poetry.extras]
+service = ["Django", "django-bootstrap3", "django-environ", "gunicorn"]
+
+[tool.poetry.dependencies.Django]
+version = "^4.2"
+optional = true
+
+[tool.poetry.dependencies.django-bootstrap3]
+version = "^23.1"
+optional = true
+
+[tool.poetry.dependencies.django-environ]
+version = "^0.10.0"
+optional = true
+
+[tool.poetry.dependencies.gunicorn]
+version = "^25.1.0"
+optional = true
 
 [tool.poetry.scripts]
 gerber_to_scad = "gerber_to_scad.cli:gerber_to_scad_cli"
