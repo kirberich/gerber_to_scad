@@ -43,10 +43,34 @@ jobs:
       - name: Run CLI help
         run: gerber_to_scad -h
 
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install OpenSCAD
+        run: sudo apt-get install -y openscad xvfb
+
+      - name: Install package
+        run: pip install .
+
+      - name: Generate OpenSCAD file
+        run: gerber_to_scad tests/test_board-outline.gko tests/test_board-toppaste.gtp output.scad
+
+      - name: Validate OpenSCAD file
+        run: xvfb-run openscad -o output.stl output.scad
+
   release-testpypi:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [lint, install]
+    needs: [lint, install, test]
     environment: testpypi
     permissions:
       id-token: write
@@ -77,7 +101,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
-    needs: [lint, install]
+    needs: [lint, install, test]
     environment: pypi
     permissions:
       id-token: write
