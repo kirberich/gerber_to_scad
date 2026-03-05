@@ -5,10 +5,17 @@ This repository has both a CLI tool, and a web app you can run locally or self-h
 
 ## Installation
 
-`gerber_to_scad` requires python3.10.
+To install just the library: `pip install gerber-to-scad`
+To install the library and the web service: `pip install "gerber-to-scad[service]"`
 
+`gerber_to_scad` requires python3.10 or higher.
+
+## Development setup
+
+* Clone the repo
 * Make sure you have [poetry](https://python-poetry.org/docs/) installed.
 * Run `poetry install`.
+* To activate the poetry virtualenv, run `poetry shell`.
 
 Note: on M1 macs, scipy doesn't install correctly out of the box. If you're getting installation errors, try this:
 
@@ -17,11 +24,10 @@ brew install openblas
 export OPENBLAS="$(brew --prefix openblas)"
 poetry install
 ```
+
 ## Usage
 
-* To activate the poetry virtualenv, run `poetry shell`.
-
-You should now be able to run the script. You'll get some information on available options if you run it with the -h argument:
+You'll get some information on available options if you run it with the -h argument:
 
 ```bash
 (env) $ gerber_to_scad -h
