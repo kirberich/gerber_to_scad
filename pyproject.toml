@@ -3,7 +3,7 @@ authors = ["Rob Kirberich <rob@kirberich.uk>"]
 description = "Solder stencil generator, converts gerber files to a 3d-printable openSCAD solder stencil"
 readme = 'README.md'
 name = "gerber_to_scad"
-version = "0.1.3"
+version = "0.1.4"
 
 [tool.poetry.dependencies]
 pcb-tools = "^0.1.6"
