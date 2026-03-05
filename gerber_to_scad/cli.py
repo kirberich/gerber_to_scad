@@ -1,6 +1,9 @@
 """CLI entry point for gerber_to_scad."""
 
 import argparse
+import subprocess
+import tempfile
+from pathlib import Path
 
 from pygerber.gerberx3.api.v2 import GerberFile
 
@@ -69,6 +72,12 @@ def gerber_to_scad_cli():
         action="store_true",
         help="Flip the stencil. Use this for making stencils for the bottom layer.",
     )
+    parser.add_argument(
+        "--openscad-binary",
+        default="openscad",
+        help="Path to the OpenSCAD binary (default: %(default)s). "
+        "Only used when the output file ends in .stl.",
+    )
 
     args = parser.parse_args()
 
@@ -87,8 +96,19 @@ def gerber_to_scad_cli():
         flip_stencil=args.flip,
     )
 
-    with open(args.output_file, "w") as output_file:
-        output_file.write(converter.convert())
+    scad_content = converter.convert()
+
+    if Path(args.output_file).suffix.lower() == ".stl":
+        with tempfile.NamedTemporaryFile(suffix=".scad", mode="w", delete=False) as tmp:
+            tmp.write(scad_content)
+            tmp_path = tmp.name
+        subprocess.run(
+            [args.openscad_binary, "-o", args.output_file, tmp_path], check=True
+        )
+        Path(tmp_path).unlink()
+    else:
+        with open(args.output_file, "w") as output_file:
+            output_file.write(scad_content)
 
 
 if __name__ == "__main__":

@@ -61,11 +61,8 @@ jobs:
       - name: Install package
         run: pip install .
 
-      - name: Generate OpenSCAD file
-        run: gerber_to_scad tests/test_board-outline.gko tests/test_board-toppaste.gtp output.scad
-
-      - name: Validate OpenSCAD file
-        run: xvfb-run openscad -o output.stl output.scad
+      - name: Generate STL file
+        run: xvfb-run gerber_to_scad tests/test_board-outline.gko tests/test_board-toppaste.gtp output.stl
 
   release-testpypi:
     runs-on: ubuntu-latest
