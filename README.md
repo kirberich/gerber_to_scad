@@ -5,8 +5,8 @@ This repository has both a CLI tool, and a web app you can run locally or self-h
 
 ## Installation
 
-To install just the library: `pip install gerber-to-scad`
-To install the library and the web service: `pip install "gerber-to-scad[service]"`
+* To install just the library: `pip install gerber-to-scad`
+* To install the library and the web service: `pip install "gerber-to-scad[service]"`
 
 `gerber_to_scad` requires python3.10 or higher.
 
