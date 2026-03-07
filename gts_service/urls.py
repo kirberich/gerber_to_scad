@@ -17,7 +17,9 @@ Including another URLconf
 from django.urls import path
 
 from gts_service import views
+from gts_service.api import api
 
 urlpatterns = [
     path("", views.main),
+    path("", api.urls),  # type: ignore[arg-type]
 ]

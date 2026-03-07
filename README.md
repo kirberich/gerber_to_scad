@@ -45,12 +45,19 @@ Options:
   -t, --thickness FLOAT           Stencil thickness in mm. Should be a
                                   multiple of your layer height.  [default:
                                   0.2]
-  -n, --no-ledge                  Exclude the alignment ledge around the board
-                                  outline.
-  -f, --full-ledge                Include a full ledge (default is half
-                                  ledge).
-  -L, --ledge-thickness FLOAT     Ledge thickness in mm. Should be less than
-                                  the PCB thickness.  [default: 1.2]
+  -a, --alignment-aid [ledge|frame|none]
+                                  Alignment aid to include with the stencil.
+                                  [default: ledge]
+  -f, --full-ledge                [ledge] Extend the ledge all the way around
+                                  the board (default is half ledge).
+  -L, --ledge-thickness FLOAT     [ledge] Ledge thickness in mm. Should be
+                                  less than the PCB thickness.  [default: 1.2]
+  --frame-width FLOAT             [frame] Width of the frame in mm.  [default:
+                                  155.0]
+  --frame-height FLOAT            [frame] Height of the frame in mm.
+                                  [default: 155.0]
+  --frame-thickness FLOAT         [frame] Thickness of the frame in mm.
+                                  [default: 1.2]
   -g, --gap FLOAT                 Gap in mm between board and ledge. Increase
                                   if fit is too tight.  [default: 0.0]
   -i, --increase-hole-size FLOAT  Increase all hole sizes by this amount in
