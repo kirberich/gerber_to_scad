@@ -38,7 +38,7 @@ SECRET_KEY = cast(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = cast(bool, env.bool("DEBUG"))
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["solder-stencil.me", "localhost", "solder-stencil.kirberich.co.uk"]
 
 
 # Application definition
@@ -120,3 +120,7 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 OPENSCAD_BIN = cast(str, env.str("SCAD_BINARY"))
+
+# Reverse proxy support
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
