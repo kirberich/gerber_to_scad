@@ -1,43 +1,8 @@
 {% extends "base.html" %}
 {% load bootstrap3 %}
+{% load static %}
 {% block extra_head %}
-<script>
-    $(document).ready(function () {
-        $(".collapse-checkbox").change(function () {
-            if (this.checked) {
-                $(this)
-                    .closest(".collapse-container")
-                    .find(".collapse-content")
-                    .addClass("expanded");
-            } else {
-                $(this)
-                    .closest(".collapse-container")
-                    .find(".collapse-content")
-                    .removeClass("expanded");
-            }
-        });
-
-        $(".manual-stencil-size").change(function () {
-            if (this.checked) {
-                $("#id_outline_file").attr("disabled", "disabled");
-            } else {
-                $("#id_outline_file").removeAttr("disabled");
-            }
-        });
-
-        $(".include-frame").change(function () {
-            if (this.checked) {
-                $(".include-ledge").attr("checked", false).trigger("change");
-            }
-        });
-
-        $(".include-ledge").change(function () {
-            if (this.checked) {
-                $(".include-frame").attr("checked", false).trigger("change");
-            }
-        });
-    });
-</script>
+<script src="{% static 'main.js' %}" defer></script>
 <style>
     label {
         font-weight: normal;
@@ -59,11 +24,8 @@
     .form-group:last-of-type {
         margin-bottom: 0;
     }
-    .collapse-content {
+    .collapse-content.collapsed {
         display: none;
-    }
-    .collapse-content.expanded {
-        display: inherit;
     }
     input[type="checkbox"] {
         margin-right: 5px;
@@ -108,7 +70,7 @@
                 <strong>ℹ️ See bottom of the page for some usage hints.</strong>
             </p>
             <hr />
-            <form action="" method="POST" enctype="multipart/form-data" class="form">
+            <form action="/convert" method="POST" enctype="multipart/form-data" class="form">
                 {% csrf_token %}
                 {% bootstrap_form_errors form type='non_fields' %}
 
@@ -119,29 +81,21 @@
 
                 <h4>Processing Options</h4>
                 {% bootstrap_field form.flip_stencil %}
-                {% bootstrap_field form.stencil_thickness %}
+                {% bootstrap_field form.thickness %}
                 {% bootstrap_field form.increase_hole_size_by %}
                 {% bootstrap_field form.gap %}
                 <hr />
 
-                <h4>Ledge</h4>
-                <div class="collapse-container">
-                    {% bootstrap_field form.include_ledge %}
-                    {% bootstrap_field form.full_ledge %}
-                    <div class="collapse-content expanded">
-                        {% bootstrap_field form.ledge_thickness %}
-                    </div>
+                <h4>Alignment Aid</h4>
+                {% bootstrap_field form.alignment_aid %}
+                <div id="ledge-options">
+                    {% bootstrap_field form.ledge__is_full_ledge %}
+                    {% bootstrap_field form.ledge__thickness %}
                 </div>
-                <hr />
-
-                <h4>Frame</h4>
-                <div class="collapse-container">
-                    {% bootstrap_field form.include_frame %}
-                    <div class="collapse-content">
-                        {% bootstrap_field form.frame_width %}
-                        {% bootstrap_field form.frame_height %}
-                        {% bootstrap_field form.frame_thickness %}
-                    </div>
+                <div id="frame-options">
+                    {% bootstrap_field form.frame__width %}
+                    {% bootstrap_field form.frame__height %}
+                    {% bootstrap_field form.frame__thickness %}
                 </div>
                 <hr />
 
