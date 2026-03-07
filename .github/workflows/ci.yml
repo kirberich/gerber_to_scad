@@ -58,14 +58,23 @@ jobs:
       - name: Install OpenSCAD
         run: sudo apt-get install -y openscad xvfb
 
-      - name: Install package
-        run: pip install .
+      - name: Install poetry
+        run: pip install poetry
+
+      - name: Install dependencies
+        run: poetry install --with dev --extras service
+
+      - name: Run pytest
+        run: poetry run pytest
+        env:
+          DEBUG: "True"
+          SCAD_BINARY: /usr/bin/openscad
 
       - name: Generate STL from two files
-        run: xvfb-run gerber_to_scad from-files --outline=tests/test_board-outline.gko --paste=tests/test_board-toppaste.gtp --output=output.stl
+        run: xvfb-run poetry run gerber_to_scad from-files --outline=tests/test_board-outline.gko --paste=tests/test_board-toppaste.gtp --output=output.stl
 
       - name: Generate STL from zip
-        run: xvfb-run gerber_to_scad from-zip --input=tests/test_board.zip --output=output_zip.stl --side top
+        run: xvfb-run poetry run gerber_to_scad from-zip --input=tests/test_board.zip --output=output_zip.stl --side top
 
   release-testpypi:
     runs-on: ubuntu-latest
