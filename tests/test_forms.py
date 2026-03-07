@@ -21,14 +21,14 @@ def test_form_generation():
         ("none", "None"),
     ]
 
-    assert isinstance(Form.base_fields["ledge_is_full_ledge"], forms.BooleanField)
-    assert Form.base_fields["ledge_is_full_ledge"].initial is None
-    assert isinstance(Form.base_fields["ledge_thickness"], forms.FloatField)
-    assert Form.base_fields["ledge_thickness"].required is False
+    assert isinstance(Form.base_fields["ledge__is_full_ledge"], forms.BooleanField)
+    assert Form.base_fields["ledge__is_full_ledge"].initial is None
+    assert isinstance(Form.base_fields["ledge__thickness"], forms.FloatField)
+    assert Form.base_fields["ledge__thickness"].required is False
 
-    assert isinstance(Form.base_fields["frame_width"], forms.FloatField)
-    assert isinstance(Form.base_fields["frame_height"], forms.FloatField)
-    assert isinstance(Form.base_fields["frame_thickness"], forms.FloatField)
-    assert Form.base_fields["frame_width"].required is False
-    assert Form.base_fields["frame_height"].required is False
-    assert Form.base_fields["frame_thickness"].required is False
+    assert isinstance(Form.base_fields["frame__width"], forms.FloatField)
+    assert isinstance(Form.base_fields["frame__height"], forms.FloatField)
+    assert isinstance(Form.base_fields["frame__thickness"], forms.FloatField)
+    assert Form.base_fields["frame__width"].required is False
+    assert Form.base_fields["frame__height"].required is False
+    assert Form.base_fields["frame__thickness"].required is False

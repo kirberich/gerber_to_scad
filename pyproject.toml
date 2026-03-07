@@ -16,14 +16,10 @@ setuptools = ">=67.0.0,<81"
 click = "^8.3.1"
 
 [tool.poetry.extras]
-service = ["Django", "django-bootstrap3", "django-environ", "django-ninja", "gunicorn"]
+service = ["Django", "django-environ", "django-ninja", "gunicorn"]
 
 [tool.poetry.dependencies.Django]
 version = "^4.2"
-optional = true
-
-[tool.poetry.dependencies.django-bootstrap3]
-version = "^23.1"
 optional = true
 
 [tool.poetry.dependencies.django-environ]

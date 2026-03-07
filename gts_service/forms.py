@@ -1,7 +1,7 @@
 import types
 from collections import defaultdict
 from logging import getLogger
-from typing import Any, Callable, Literal, TypeVar, Union, get_args, get_origin
+from typing import Any, Literal, TypeVar, Union, get_args, get_origin
 
 from django import forms
 from django.core.files.uploadedfile import InMemoryUploadedFile

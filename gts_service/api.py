@@ -32,7 +32,6 @@ def _handle_form_errors(
 ) -> HttpResponse:
     for key, value in errors.items():
         form.errors[key] = value
-
     return _render_form(request, form, status=422)
 
 
