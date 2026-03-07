@@ -1110,10 +1110,24 @@ files = [
     {file = "tzdata-2025.3.tar.gz", hash = "sha256:de39c2ca5dc7b0344f2eba86f49d614019d29f060fc4ebc8a417896a620b56a7"},
 ]
 
+[[package]]
+name = "whitenoise"
+version = "6.12.0"
+description = "Radically simplified static file serving for WSGI applications"
+optional = true
+python-versions = ">=3.10"
+files = [
+    {file = "whitenoise-6.12.0-py3-none-any.whl", hash = "sha256:fc5e8c572e33ebf24795b47b6a7da8da3c00cff2349f5b04c02f28d0cc5a3cc2"},
+    {file = "whitenoise-6.12.0.tar.gz", hash = "sha256:f723ebb76a112e98816ff80fcea0a6c9b8ecde835f8ddda25df7a30a3c2db6ad"},
+]
+
+[package.extras]
+brotli = ["brotli"]
+
 [extras]
-service = ["Django", "django-environ", "django-ninja", "gunicorn"]
+service = ["Django", "django-environ", "django-ninja", "gunicorn", "whitenoise"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4"
-content-hash = "41114c7789983020b991546f3e5198c52514f7eaa0fcf2f5eab88bf649cc091b"
+content-hash = "85d651c38b10ae15fd7c55207c23d938bf596608f6ff5e0c1d7c0da8bd04f4cd"
