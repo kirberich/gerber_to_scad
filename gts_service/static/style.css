@@ -4,7 +4,7 @@
     --green-muted: #8db89a;
     --green-border: #c8d8c8;
     --green-gradient: linear-gradient(
-        90deg,
+        120deg,
         var(--green) -40%,
         var(--green-light) 70%
     );
@@ -100,6 +100,12 @@ a {
 .panel-info > .panel-heading {
     background: var(--gold-light);
     border-color: var(--gold-border);
+}
+.panel-info > .panel-heading .panel-title {
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    color: var(--green);
 }
 
 /* Form */
