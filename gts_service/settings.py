@@ -123,4 +123,10 @@ OPENSCAD_BIN = cast(str, env.str("SCAD_BINARY"))
 
 # Reverse proxy support
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+CSRF_TRUSTED_ORIGINS = cast(
+    list[str],
+    env.list(
+        "CSRF_TRUSTED_ORIGINS",
+        default=[],  # pyright: ignore
+    ),
+)
