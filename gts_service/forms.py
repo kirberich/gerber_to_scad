@@ -172,21 +172,13 @@ def _required(
     field_name: str,
     cleaned_data: dict[str, Any],
     errors: dict[str, ErrorList],
-    cast_to: Callable[[Any], T] | None = None,
 ) -> T | None:
     value = cleaned_data.get(field_name)
     if value is None:
         errors[field_name].append(f"{field_name} is required.")
         return
 
-    if cast_to is None:
-        return value
-
-    try:
-        return cast_to(value)
-    except Exception:
-        errors[field_name].append(f"{field_name} is not a valid {cast_to.__name__}")
-        return
+    return value
 
 
 def stencil_from_form(form: forms.Form):
@@ -225,22 +217,14 @@ def stencil_from_form(form: forms.Form):
     match alignment_type:
         case "ledge":
             alignment_aid = Ledge(
-                is_full_ledge=bool(cleaned_data.get("ledge_is_full_ledge")),
-                thickness=_required(
-                    "ledge_thickness", cleaned_data, errors, cast_to=float
-                )
-                or 0,
+                is_full_ledge=bool(cleaned_data.get("ledge__is_full_ledge")),
+                thickness=_required("ledge__thickness", cleaned_data, errors) or 0,
             )
         case "frame":
             alignment_aid = Frame(
-                width=_required("frame_width", cleaned_data, errors, cast_to=float)
-                or 0,
-                height=_required("frame_height", cleaned_data, errors, cast_to=float)
-                or 0,
-                thickness=_required(
-                    "frame_thickness", cleaned_data, errors, cast_to=float
-                )
-                or 0,
+                width=_required("frame__width", cleaned_data, errors) or 0,
+                height=_required("frame__height", cleaned_data, errors) or 0,
+                thickness=_required("frame__thickness", cleaned_data, errors) or 0,
             )
         case "none":
             pass
