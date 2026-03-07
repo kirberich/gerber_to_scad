@@ -13,8 +13,15 @@ api = NinjaAPI()
 
 
 def get_version() -> str:
-    from importlib.metadata import version
-    return version("gerber_to_scad")
+    try:
+        from importlib.metadata import version
+        return version("gerber_to_scad")
+    except Exception:
+        import tomllib
+        from pathlib import Path
+        pyproject = Path(__file__).parent.parent / "pyproject.toml"
+        with open(pyproject, "rb") as f:
+            return tomllib.load(f)["tool"]["poetry"]["version"]
 
 
 def _render_form(
