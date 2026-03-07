@@ -30,10 +30,6 @@ LogDriver=journald
 # Drop all capabilities — this app needs none
 DropCapability=all
 
-# Read-only root fs; /tmp is still writable via tmpfs
-ReadOnly=true
-Tmpfs=/tmp
-
 [Service]
 Restart=on-failure
 RestartSec=5s
