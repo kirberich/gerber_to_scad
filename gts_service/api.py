@@ -13,8 +13,8 @@ api = NinjaAPI()
 
 
 def get_version() -> str:
-    with open("version") as f:
-        return f.read()
+    from importlib.metadata import version
+    return version("gerber_to_scad")
 
 
 def _render_form(
