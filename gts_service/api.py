@@ -2,7 +2,7 @@
 
 from django import forms
 from django.forms.utils import ErrorList
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from ninja import NinjaAPI
 
@@ -34,6 +34,11 @@ def _handle_form_errors(
         form.errors[key] = value
 
     return _render_form(request, form, status=422)
+
+
+@api.get("/convert")
+def convert_redirect(request: HttpRequest) -> HttpResponse:
+    return HttpResponseRedirect("/")
 
 
 @api.post("/convert")
