@@ -21,4 +21,4 @@ RUN python manage.py collectstatic --noinput
 RUN useradd --no-create-home appuser && chown -R appuser $APP_HOME
 USER appuser
 
-CMD gunicorn gts_service.wsgi --bind :$PORT --workers 1 --threads 8 --worker-tmp-dir /tmp
+CMD gunicorn gts_service.wsgi --bind :$PORT --workers 1 --threads 8 --worker-tmp-dir /tmp --capture-output --access-logfile -
