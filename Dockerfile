@@ -14,7 +14,7 @@ WORKDIR $APP_HOME
 COPY . .
 
 RUN poetry config virtualenvs.create false && \
-    poetry install --no-interaction --no-ansi --without dev --extras service
+    poetry install --no-interaction --no-ansi --without dev --extras service --no-root
 
 RUN python manage.py collectstatic --noinput
 

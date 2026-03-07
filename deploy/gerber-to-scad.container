@@ -1,0 +1,42 @@
+# Podman Quadlet — rootless systemd service for gerber-to-scad
+#
+# Install:
+#   mkdir -p ~/.config/containers/systemd
+#   cp deploy/gerber-to-scad.{build,container} ~/.config/containers/systemd/
+#   systemctl --user daemon-reload
+#   systemctl --user start gerber-to-scad
+
+[Unit]
+Description=Gerber to SCAD web service
+After=local-fs.target gerber-to-scad-build.service
+Requires=gerber-to-scad-build.service
+
+[Container]
+Image=gerber-to-scad
+PublishPort=127.0.0.1:8001:8001
+
+# Override any of these via EnvironmentFile (see below)
+Environment=PORT=8001
+Environment=DEBUG=False
+Environment=SCAD_BINARY=openscad
+
+# Put secrets in ~/.config/containers/gerber-to-scad.env:
+#   SECRET_KEY=your-secret-key-here
+EnvironmentFile=%h/.config/containers/gerber-to-scad.env
+
+# Keep container logs accessible via journald
+LogDriver=journald
+
+# Drop all capabilities — this app needs none
+DropCapability=all
+
+# Read-only root fs; /tmp is still writable via tmpfs
+ReadOnly=true
+Tmpfs=/tmp
+
+[Service]
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=default.target
