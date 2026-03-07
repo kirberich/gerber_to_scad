@@ -5,12 +5,12 @@ import tempfile
 import zipfile
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 import click
 from pygerber.gerberx3.api.v2 import GerberFile, ParsedFile
 
-from .conversion import GerberConverter
+from .conversion import Frame, Ledge, Stencil, convert
 
 # File extension sets and name patterns for auto-detecting gerber layers in zips
 OUTLINE_SUFFIXES = {".gko", ".gm1", ".gm2"}
@@ -114,27 +114,44 @@ def stencil_options(f: Callable[..., Any]) -> Callable[..., Any]:
         help="Stencil thickness in mm. Should be a multiple of your layer height.",
     )
     @click.option(
-        "-n",
-        "--no-ledge",
-        "include_ledge",
-        is_flag=True,
-        default=True,
-        flag_value=False,
-        help="Exclude the alignment ledge around the board outline.",
+        "-a",
+        "--alignment-aid",
+        type=click.Choice(["ledge", "frame", "none"]),
+        default="ledge",
+        show_default=True,
+        help="Alignment aid to include with the stencil.",
     )
     @click.option(
         "-f",
         "--full-ledge",
         is_flag=True,
         default=False,
-        help="Include a full ledge (default is half ledge).",
+        help="[ledge] Extend the ledge all the way around the board (default is half ledge).",
     )
     @click.option(
         "-L",
         "--ledge-thickness",
         default=1.2,
         show_default=True,
-        help="Ledge thickness in mm. Should be less than the PCB thickness.",
+        help="[ledge] Ledge thickness in mm. Should be less than the PCB thickness.",
+    )
+    @click.option(
+        "--frame-width",
+        default=155.0,
+        show_default=True,
+        help="[frame] Width of the frame in mm.",
+    )
+    @click.option(
+        "--frame-height",
+        default=155.0,
+        show_default=True,
+        help="[frame] Height of the frame in mm.",
+    )
+    @click.option(
+        "--frame-thickness",
+        default=1.2,
+        show_default=True,
+        help="[frame] Thickness of the frame in mm.",
     )
     @click.option(
         "-g",
@@ -170,6 +187,21 @@ def stencil_options(f: Callable[..., Any]) -> Callable[..., Any]:
     return wrapper
 
 
+def _alignment_aid(
+    alignment_aid: Literal["ledge", "frame", "none"],
+    full_ledge: bool,
+    ledge_thickness: float,
+    frame_width: float,
+    frame_height: float,
+    frame_thickness: float,
+) -> Ledge | Frame | None:
+    if alignment_aid == "ledge":
+        return Ledge(is_full_ledge=full_ledge, thickness=ledge_thickness)
+    if alignment_aid == "frame":
+        return Frame(width=frame_width, height=frame_height, thickness=frame_thickness)
+    return None
+
+
 @click.group()
 def cli() -> None:
     """Convert gerber files to a 3d-printable OpenSCAD solder stencil."""
@@ -200,9 +232,12 @@ def from_files(
     paste: Path,
     output: Path,
     thickness: float,
-    include_ledge: bool,
+    alignment_aid: Literal["ledge", "frame", "none"],
     full_ledge: bool,
     ledge_thickness: float,
+    frame_width: float,
+    frame_height: float,
+    frame_thickness: float,
     gap: float,
     increase_hole_size: float,
     flip: bool,
@@ -217,9 +252,14 @@ def from_files(
         paste_parsed,
         output,
         thickness,
-        include_ledge,
-        full_ledge,
-        ledge_thickness,
+        _alignment_aid(
+            alignment_aid,
+            full_ledge,
+            ledge_thickness,
+            frame_width,
+            frame_height,
+            frame_thickness,
+        ),
         gap,
         increase_hole_size,
         flip,
@@ -248,9 +288,12 @@ def from_zip_cmd(
     output: Path,
     side: str,
     thickness: float,
-    include_ledge: bool,
+    alignment_aid: Literal["ledge", "frame", "none"],
     full_ledge: bool,
     ledge_thickness: float,
+    frame_width: float,
+    frame_height: float,
+    frame_thickness: float,
     gap: float,
     increase_hole_size: float,
     flip: bool,
@@ -264,9 +307,14 @@ def from_zip_cmd(
         paste_parsed,
         output,
         thickness,
-        include_ledge,
-        full_ledge,
-        ledge_thickness,
+        _alignment_aid(
+            alignment_aid,
+            full_ledge,
+            ledge_thickness,
+            frame_width,
+            frame_height,
+            frame_thickness,
+        ),
         gap,
         increase_hole_size,
         flip,
@@ -279,26 +327,22 @@ def _run_conversion(
     paste_parsed: ParsedFile,
     output_file: Path,
     thickness: float,
-    include_ledge: bool,
-    full_ledge: bool,
-    ledge_thickness: float,
+    alignment_aid: Ledge | Frame | None,
     gap: float,
     increase_hole_size: float,
     flip: bool,
     openscad_binary: str,
 ) -> None:
-    converter = GerberConverter(
+    stencil = Stencil(
         outline_file=outline_parsed,
         solderpaste_file=paste_parsed,
-        stencil_thickness=thickness,
-        include_ledge=include_ledge,
-        ledge_thickness=ledge_thickness,
-        full_ledge=full_ledge,
+        alignment_aid=alignment_aid,
+        thickness=thickness,
         gap=gap,
         increase_hole_size_by=increase_hole_size,
         flip_stencil=flip,
     )
-    _write_output(converter.convert(), output_file, openscad_binary)
+    _write_output(convert(stencil), output_file, openscad_binary)
 
 
 def gerber_to_scad_cli() -> None:
