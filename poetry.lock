@@ -201,20 +201,6 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
-name = "django-bootstrap3"
-version = "23.6"
-description = "Bootstrap 3 for Django"
-optional = true
-python-versions = ">=3.8"
-files = [
-    {file = "django-bootstrap3-23.6.tar.gz", hash = "sha256:f8563b2641bcad3a8626beda979ff697c8375002cbf906fbd49f4be97b0f8a54"},
-    {file = "django_bootstrap3-23.6-py3-none-any.whl", hash = "sha256:ba1334104c390ca9dc5b985a8d8ec45fab2c6401e4abb8d3a47d3b225614c3d9"},
-]
-
-[package.dependencies]
-Django = ">=3.2"
-
-[[package]]
 name = "django-environ"
 version = "0.10.0"
 description = "A package that allows you to utilize 12factor inspired environment variables to configure your Django application."
@@ -1125,9 +1111,9 @@ files = [
 ]
 
 [extras]
-service = ["Django", "django-bootstrap3", "django-environ", "django-ninja", "gunicorn"]
+service = ["Django", "django-environ", "django-ninja", "gunicorn"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4"
-content-hash = "8788c84c24b4116ca8d9f3555b0adf990ead7fd948ce0bca76314466271e68b6"
+content-hash = "41114c7789983020b991546f3e5198c52514f7eaa0fcf2f5eab88bf649cc091b"
