@@ -1130,4 +1130,4 @@ service = ["Django", "django-environ", "django-ninja", "gunicorn", "whitenoise"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4"
-content-hash = "85d651c38b10ae15fd7c55207c23d938bf596608f6ff5e0c1d7c0da8bd04f4cd"
+content-hash = "b5bfedece7d52ab9c9f385c28247d6b84f7d1aa28eba076469693cae91c9b2b2"

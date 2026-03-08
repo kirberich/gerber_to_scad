@@ -1,5 +1,8 @@
 """Django Ninja API for gerber-to-stencil conversion."""
 
+from pathlib import Path
+
+import tomli
 from django import forms
 from django.forms.utils import ErrorList
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
@@ -13,15 +16,9 @@ api = NinjaAPI()
 
 
 def get_version() -> str:
-    try:
-        from importlib.metadata import version
-        return version("gerber_to_scad")
-    except Exception:
-        import tomllib
-        from pathlib import Path
-        pyproject = Path(__file__).parent.parent / "pyproject.toml"
-        with open(pyproject, "rb") as f:
-            return tomllib.load(f)["tool"]["poetry"]["version"]
+    pyproject = Path(__file__).parent.parent / "pyproject.toml"
+    with open(pyproject, "rb") as f:
+        return tomli.load(f)["tool"]["poetry"]["version"]  # type: ignore[index]
 
 
 def _render_form(
