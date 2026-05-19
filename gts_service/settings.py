@@ -11,13 +11,8 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
-from typing import cast
 
-import environ
-
-env = environ.Env()
-# reading .env file
-environ.Env.read_env()
+from environs import env
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,21 +22,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = cast(
-    str,
-    env.str(
-        "SECRET_KEY",
-        default="-7lxck0^d7y#5$fq3ubvtm1*_g%nzd-=ich_1x)^f)8j)hgps+",  # pyright: ignore[reportArgumentType]
-    ),
+SECRET_KEY = env.str(
+    "SECRET_KEY", default="-7lxck0^d7y#5$fq3ubvtm1*_g%nzd-=ich_1x)^f)8j)hgps+"
 )
 
+
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = cast(bool, env.bool("DEBUG"))
+DEBUG = env.bool("DEBUG", default=False)
 
 ALLOWED_HOSTS = ["solder-stencil.me", "localhost", "solder-stencil.kirberich.co.uk"]
-
-
-# Application definition
 
 INSTALLED_APPS = [
     "django.contrib.auth",
@@ -65,10 +54,10 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "gts_service.urls"
 
-TEMPLATES = [  # pyright: ignore[reportUnknownVariableType]
+TEMPLATES = (
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": tuple(),
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -79,12 +68,9 @@ TEMPLATES = [  # pyright: ignore[reportUnknownVariableType]
             ],
         },
     },
-]
+)
 
 WSGI_APPLICATION = "gts_service.wsgi.application"
-
-# Password validation
-# https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -119,14 +105,8 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-OPENSCAD_BIN = cast(str, env.str("SCAD_BINARY"))
+OPENSCAD_BIN = env.str("SCAD_BINARY", default="/usr/bin/openscad")
 
 # Reverse proxy support
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-CSRF_TRUSTED_ORIGINS = cast(
-    list[str],
-    env.list(
-        "CSRF_TRUSTED_ORIGINS",
-        default=[],  # pyright: ignore
-    ),
-)
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[], subcast=str)

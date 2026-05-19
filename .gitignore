@@ -3,3 +3,4 @@ venv/
 .venv/
 __pycache__/
 staticfiles/
+.env
