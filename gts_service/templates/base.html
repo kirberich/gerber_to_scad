@@ -1,18 +1,22 @@
 {% load static %}
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>solder-stencil.me - Gerber file to solder stencil STL converter.</title>
-    <link rel="stylesheet" href="{% static 'style.css' %}" />
-    {% block extra_head %}{% endblock %}
-  </head>
-  <body>
-    <nav class="navbar">
-      <a class="navbar-brand" href="#">solder-stencil.me</a>
-      <span class="navbar-text">Convert gerber files to 3d printable solder stencils.</span>
-    </nav>
-    {% block body %}{% endblock %}
-  </body>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>
+            solder-stencil.me - Gerber file to solder stencil STL converter.
+        </title>
+        <link rel="stylesheet" href="{% static 'style.css' %}" />
+        {% block extra_head %}{% endblock %}
+    </head>
+    <body>
+        <nav class="navbar">
+            <a class="navbar-brand" href="#">solder-stencil.me</a>
+            <span class="navbar-text"
+                >Convert gerber files to 3d printable solder stencils.</span
+            >
+        </nav>
+        {% block body %}{% endblock %}
+    </body>
 </html>
