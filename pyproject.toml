@@ -17,7 +17,11 @@ click = "^8.3.1"
 tomli = "^2.0"
 
 [tool.poetry.extras]
-service = ["Django", "environs", "django-ninja", "gunicorn", "whitenoise"]
+service = ["Django", "environs", "django-ninja", "gunicorn", "uvicorn", "whitenoise"]
+
+[tool.poetry.dependencies.uvicorn]
+version = "^0.47.0"
+optional = true
 
 [tool.poetry.dependencies.Django]
 version = "^5.2"
