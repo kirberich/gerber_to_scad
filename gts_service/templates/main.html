@@ -8,19 +8,17 @@
 <div class="container">
 
   <div class="panel">
-    <div class="panel-heading">
-      <h3 class="panel-title">Upload your gerber files (one for the paste layer and one for the outline), get an STL file.</h3>
-    </div>
     <div class="panel-body">
-      <p>If you use <strong>eagle</strong>, you can find a CAM script that will export the right layers <a href="https://raw.githubusercontent.com/kirberich/gerber_to_scad/master/export_for_gts.cam">here</a>.</p>
-      <p>If you use <strong>Fritzing</strong>, select File &rarr; Export &rarr; For Production &rarr; Extended Gerber and select a directory for the resulting files. Upload the file named <em>your_project_contour.gm1</em> for the outline and <em>your_project_pasteMaskTop.gtp</em> for the paste layer.</p>
-    </div>
-  </div>
+      <p>Upload your gerber files (one for the paste layer and one for the outline), get a 3d-printable solder stencil as an STL file.</p>
+      <p>3d-printed stencils don't work nearly as well as stainless steel ones, and depending on your printer and nozzle size, ICs with very close pin spacing will be a challenge. Usually, pin spacings down to about 0.4mm work just fine though.</p>
+      <ul>
+        <li>If you find the pads and holes don't align properly, try increasing the distance between board and ledge by a few tenths of a millimeter. If that's not it, your printer's calibration might be off.</li>
+        <li>You can use negative values for hole size increase to increase the separation between closely spaced tabs, to allow printing a separating line. The downside is that this makes all pads smaller.</li>
+        <li>Some boards can produce 2-dimensional walls if pads directly touch each other, which can throw off slicers. If this happens, increase the hole size very slightly (like 0.001mm) to make the holes overlap.</li>
+        <li>The thicker the stencil and the smaller the solder pads, the more paste will stick to the stencil. If you're not getting enough paste on the pads, make the holes bigger or reduce the stencil thickness.</li>
+        <li>If you've got a file that's not working right, send it to me at <a href="mailto:rob@kirberich.uk">rob@kirberich.uk</a> and I'll have a look to see what's up.</li>
+      </ul>
 
-  <div class="panel">
-    <div class="panel-heading"><h3 class="panel-title">File Upload</h3></div>
-    <div class="panel-body">
-      <p><strong>&#x2139;&#xFE0F; See bottom of the page for some usage hints.</strong></p>
       <hr />
       <form action="/convert" method="POST" enctype="multipart/form-data">
         {% csrf_token %}
@@ -63,22 +61,13 @@
     </div>
   </div>
 
-  <div class="panel panel-info">
-    <div class="panel-heading"><h3 class="panel-title">Hints</h3></div>
-    <div class="panel-body">
-      <ul>
-        <li>If you find the pads and holes don't align properly, try increasing the distance between board and ledge by a few tenths of a millimeter. If that's not it, your printer's calibration might be off.</li>
-        <li>You can use negative values for hole size increase to increase the separation between closely spaced tabs, to allow printing a separating line. The downside is that this makes all pads smaller.</li>
-        <li>Some boards can produce 2-dimensional walls if pads directly touch each other, which can throw off slicers. If this happens, increase the hole size very slightly (like 0.001mm) to make the holes overlap.</li>
-        <li>The thicker the stencil and the smaller the solder pads, the more paste will stick to the stencil. If you're not getting enough paste on the pads, make the holes bigger or reduce the stencil thickness.</li>
-        <li>If you've got a file that's not working right, send it to me at <a href="mailto:rob@kirberich.uk">rob@kirberich.uk</a> and I'll have a look to see what's up.</li>
-      </ul>
-    </div>
-  </div>
-
   <br />
 
-  <p>Special thanks to <a href="https://twitter.com/kazade" target="_blank">kazade</a> for the brilliant idea of using <a href="http://www.openscad.org/" target="_blank">OpenSCAD</a> to make this work. This app uses <a href="https://github.com/curtacircuitos/pcb-tools" target="_blank">pcb-tools</a> to read Gerber files and <a href="https://github.com/SolidCode/SolidPython" target="_blank">SolidPython</a> to generate OpenSCAD code. OpenSCAD is used to generate the resulting STL files. The website is built using <a href="https://www.djangoproject.com/" target="_blank">Django</a>.</p>
+  <p>
+      Special thanks to <a href="https://twitter.com/kazade" target="_blank">kazade</a> for the brilliant idea of using <a href="http://www.openscad.org/" target="_blank">OpenSCAD</a> to make this work.
+      This app uses <a href="https://github.com/Argmaster/pygerber" target="_blank">pygerber</a> to read Gerber files and
+      <a href="https://github.com/SolidCode/SolidPython" target="_blank">SolidPython</a> to generate OpenSCAD code.
+      OpenSCAD is used to generate the resulting STL files. The website is built using <a href="https://www.djangoproject.com/" target="_blank">Django</a>.</p>
 
   <p>You can find the code for the underlying converter and web app at <a href="https://github.com/kirberich/gerber_to_scad" target="_blank">https://github.com/kirberich/gerber_to_scad</a>.</p>
 
