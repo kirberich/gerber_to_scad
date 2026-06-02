@@ -86,13 +86,13 @@ files = [
 
 [[package]]
 name = "basedpyright"
-version = "1.39.5"
+version = "1.39.6"
 description = "static type checking for Python (but based)"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "basedpyright-1.39.5-py3-none-any.whl", hash = "sha256:dda95954607e3a5e409b5a3083607b69976353cd56c05fdd77e32f6be27c9898"},
-    {file = "basedpyright-1.39.5.tar.gz", hash = "sha256:373e6999b9dc450c4af077cb76a758f5959eedf8d03f0aac144bc59227f47d33"},
+    {file = "basedpyright-1.39.6-py3-none-any.whl", hash = "sha256:5e0b9befbae6b26d0fbcc6645ac26923725e749d1224539e24f05ab07f9365ad"},
+    {file = "basedpyright-1.39.6.tar.gz", hash = "sha256:d00ec5f8ba4e1a67dfc2fa3a9474229c89f61f207d14c02d320db78f57aa16ef"},
 ]
 
 [package.dependencies]
@@ -213,13 +213,13 @@ pycparser = {version = "*", markers = "implementation_name != \"PyPy\""}
 
 [[package]]
 name = "click"
-version = "8.4.0"
+version = "8.4.1"
 description = "Composable command line interface toolkit"
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "click-8.4.0-py3-none-any.whl", hash = "sha256:40c50b7c6c6adac2823d411041ec84f3f103f1b280d5e9ce0d7f998995832f81"},
-    {file = "click-8.4.0.tar.gz", hash = "sha256:638f1338fe1235c8f4e008e4a8a254fb5c5fbdcbb40ece3c9142ebb78e792973"},
+    {file = "click-8.4.1-py3-none-any.whl", hash = "sha256:482be17c6991b8c19c5429a1e995d9b0efdbb63172824c41f99965dc0ade8ec2"},
+    {file = "click-8.4.1.tar.gz", hash = "sha256:918b5633eddf6b41c32d4f454bf0de810065c74e3f7dbf8ee5452f8be88d3e96"},
 ]
 
 [package.dependencies]
@@ -337,13 +337,13 @@ redis = ["redis", "types-redis"]
 
 [[package]]
 name = "django-stubs-ext"
-version = "6.0.4"
+version = "6.0.5"
 description = "Monkey-patching and extensions for django-stubs"
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "django_stubs_ext-6.0.4-py3-none-any.whl", hash = "sha256:0434a912bb08a370afcac9e90305c53e6f4eed3c1d1d46962559da5f8dbb8f27"},
-    {file = "django_stubs_ext-6.0.4.tar.gz", hash = "sha256:ff21f7b4362928b56e18cda0595f296e33c665f3019f4e3e4231977385e76cac"},
+    {file = "django_stubs_ext-6.0.5-py3-none-any.whl", hash = "sha256:a9932c8233d6dd4e34ae0b192026379c1a9be8f0b7c27aa1fa09ae215169773e"},
+    {file = "django_stubs_ext-6.0.5.tar.gz", hash = "sha256:1cc325e991303849bce70e19748981b225ef08b37256f263e113caf97cd3bcc0"},
 ]
 
 [package.dependencies]
@@ -475,20 +475,20 @@ typing-extensions = {version = "*", markers = "python_version < \"3.11\""}
 
 [[package]]
 name = "nodejs-wheel-binaries"
-version = "24.15.0"
+version = "24.16.0"
 description = "unoffical Node.js package"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "nodejs_wheel_binaries-24.15.0-py2.py3-none-macosx_13_0_arm64.whl", hash = "sha256:a6232fa8b754220941f52388c8ead923f7c1c7fdf0ea0d98f657523bd9a81ef4"},
-    {file = "nodejs_wheel_binaries-24.15.0-py2.py3-none-macosx_13_0_x86_64.whl", hash = "sha256:001a6b62c69d9109c1738163cca00608dd2722e8663af59300054ea02610972d"},
-    {file = "nodejs_wheel_binaries-24.15.0-py2.py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:0fbc48765e60ed0ff30d43898dbf5cadbadf2e5f1e7f204afc2b01493b7ebce6"},
-    {file = "nodejs_wheel_binaries-24.15.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:20ee0536809795da8a4942fc1ab4cbdebbcaaf29383eab67ba8874268fb00008"},
-    {file = "nodejs_wheel_binaries-24.15.0-py2.py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:1fade6c214285e72472ca40a631e98ff36559671cd5eefc8bf009471d67f04b4"},
-    {file = "nodejs_wheel_binaries-24.15.0-py2.py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:3984cb8d87766567aee67a49743227ab40ede6f47734ec990ff90e50b74e7740"},
-    {file = "nodejs_wheel_binaries-24.15.0-py2.py3-none-win_amd64.whl", hash = "sha256:a437601956b532dcb3082046e6978e622733f90edc0932cbb9adb3bb97a16501"},
-    {file = "nodejs_wheel_binaries-24.15.0-py2.py3-none-win_arm64.whl", hash = "sha256:bdf4a431e08321a32efc604111c6f23941f87055d796a537e8c4110daecad23f"},
-    {file = "nodejs_wheel_binaries-24.15.0.tar.gz", hash = "sha256:b43f5c4f6e5768d8845b2ae4682eb703a19bf7aadc84187e2d903ed3a611c859"},
+    {file = "nodejs_wheel_binaries-24.16.0-py2.py3-none-macosx_13_0_arm64.whl", hash = "sha256:d9f8f677dcf30e37ac244f07869726abe043f01eb0f45722b1df31cc2af7093c"},
+    {file = "nodejs_wheel_binaries-24.16.0-py2.py3-none-macosx_13_0_x86_64.whl", hash = "sha256:3d0370fe7120ce9697a4f60d40480d2bd8808d9f30131458d5afc0040d4e5a51"},
+    {file = "nodejs_wheel_binaries-24.16.0-py2.py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:85dc92bbb79c851569c5925dcc2a4c915a034efab375f99e4e7e6bbe9cca8342"},
+    {file = "nodejs_wheel_binaries-24.16.0-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:2f3036292811514ba847b3708492644764f88a833ac425c5f55007014308ddfd"},
+    {file = "nodejs_wheel_binaries-24.16.0-py2.py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:db8a8a76ebd2b28ecbfc9ad464baa3707241b9e050a30e2efdf6f60c0f886502"},
+    {file = "nodejs_wheel_binaries-24.16.0-py2.py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:f1a3d8f7b4491cbbd023ba3fc4e901fcca2d9fb80d57f24ba3890de8b1dbac03"},
+    {file = "nodejs_wheel_binaries-24.16.0-py2.py3-none-win_amd64.whl", hash = "sha256:bb136be9944f0662dcf1120f45193a6b75b13fac378971a95cc42c9f879a81aa"},
+    {file = "nodejs_wheel_binaries-24.16.0-py2.py3-none-win_arm64.whl", hash = "sha256:8308940b5edd0a50dc5267ea36ba21c9f668e83fe0d9f293937174d3a7e31c36"},
+    {file = "nodejs_wheel_binaries-24.16.0.tar.gz", hash = "sha256:c973cb69dc5fd16e6f6dc6e579e2c3d5534e2a1f57619dddf5ba070efa7dde37"},
 ]
 
 [[package]]
@@ -953,20 +953,20 @@ files = [
 
 [[package]]
 name = "pytest"
-version = "8.4.2"
+version = "9.0.3"
 description = "pytest: simple powerful testing with Python"
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.10"
 files = [
-    {file = "pytest-8.4.2-py3-none-any.whl", hash = "sha256:872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79"},
-    {file = "pytest-8.4.2.tar.gz", hash = "sha256:86c0d0b93306b961d58d62a4db4879f27fe25513d4b969df351abdddb3c30e01"},
+    {file = "pytest-9.0.3-py3-none-any.whl", hash = "sha256:2c5efc453d45394fdd706ade797c0a81091eccd1d6e4bccfcd476e2b8e0ab5d9"},
+    {file = "pytest-9.0.3.tar.gz", hash = "sha256:b86ada508af81d19edeb213c681b1d48246c1a91d304c6c81a427674c17eb91c"},
 ]
 
 [package.dependencies]
 colorama = {version = ">=0.4", markers = "sys_platform == \"win32\""}
 exceptiongroup = {version = ">=1", markers = "python_version < \"3.11\""}
-iniconfig = ">=1"
-packaging = ">=20"
+iniconfig = ">=1.0.1"
+packaging = ">=22"
 pluggy = ">=1.5,<2"
 pygments = ">=2.7.2"
 tomli = {version = ">=1", markers = "python_version < \"3.11\""}
@@ -1286,4 +1286,4 @@ service = ["Django", "django-ninja", "environs", "gunicorn", "uvicorn", "whiteno
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4"
-content-hash = "97706807f7a500de781742643274aeffb764261c36dbb77208ec55d2c01e2b82"
+content-hash = "ac6a9193228436fd6e9f3dbb9ea0b9d3e5b2bd1612815af3c0cfee93d385e9fe"

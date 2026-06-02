@@ -51,7 +51,7 @@ gerber_to_scad = "gerber_to_scad.cli:gerber_to_scad_cli"
 ruff = "^0.9.3"
 basedpyright = "^1.37.1"
 django-stubs = "^5.2.9"
-pytest = "^8.0"
+pytest = "^9.0.3"
 pytest-django = "^4.9"
 
 [build-system]
