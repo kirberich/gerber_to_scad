@@ -64,5 +64,5 @@ reportMissingTypeStubs = 'none'
 reportUnknownMemberType = 'none'
 reportUnknownArgumentType = 'none'
 
-[tool.pytest]
+[tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "tests.settings"
